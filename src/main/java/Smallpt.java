@@ -21,7 +21,7 @@ class Smallpt {
 			new Sphere(1e5, new Vec(50, -1e5 + 81.6, 81.6), new Vec(0, 0, 0), new Vec(.75, .75, .75), Refl_t.DIFF),// Top
 			new Sphere(16.5, new Vec(27, 16.5, 47), new Vec(0, 0, 0), new Vec(1, 1, 1).scale(.999), Refl_t.SPEC),// Mirr
 			new Sphere(16.5, new Vec(73, 16.5, 78), new Vec(0, 0, 0), new Vec(1, 1, 1).scale(.999), Refl_t.REFR),// Glas
-			new Sphere(600, new Vec(50, 681.6 - .27, 81.6), new Vec(12, 12, 12), new Vec(0, 0, 0), Refl_t.DIFF)
+			new Sphere(1.5, new Vec(50, 81.6 - 16.5, 81.6), new Vec(400, 400, 400), new Vec(0, 0, 0), Refl_t.DIFF)
 	// Lite
 	};
 
@@ -47,7 +47,11 @@ class Smallpt {
 
 	public static final Random random = new Random(1337);
 
-	static Vec radiance(final Ray r, int depth, final int Xi) {
+	static Vec radiance(final Ray r, final int depth, final int Xi) {
+		return radiance(r, depth, Xi, 1);
+	}
+
+	static Vec radiance(final Ray r, int depth, final int Xi, final int E) {
 		final Intersection intersection = new Intersection();
 		intersect(r, intersection);
 		if (!intersection.b) {
@@ -59,11 +63,11 @@ class Smallpt {
 		final Vec nl = n.dot(r.d) < 0 ? n : n.scale(-1);
 		Vec f = obj.c;
 		final double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
-		if (++depth > 5) {
+		if (++depth > 5 || p == 0) {
 			if (random.nextDouble() < p) {
 				f = f.scale(1 / p);
 			} else {
-				return obj.e;
+				return obj.e.scale(E);
 			}
 		} // R.R.
 		if (obj.refl == Refl_t.DIFF) { // Ideal DIFFUSE reflection
@@ -74,7 +78,33 @@ class Smallpt {
 			final Vec u = ((Math.abs(w.x) > .1 ? new Vec(0, 1, 0) : new Vec(1, 0, 0)).cross(w)).norm();
 			final Vec v = w.cross(u);
 			final Vec d = (u.scale(Math.cos(r1) * r2s).plus(v.scale(Math.sin(r1) * r2s)).plus(w.scale(Math.sqrt(1 - r2)))).norm();
-			return obj.e.plus(f.multiply(radiance(new Ray(x, d), depth, Xi)));
+
+			// Loop over any lights
+			Vec e = new Vec(0, 0, 0);
+			for (int i = 0; i < spheres.length; i++) {
+				final Sphere s = spheres[i];
+				if (s.e.x <= 0 && s.e.y <= 0 && s.e.z <= 0) {
+					continue;
+				} // skip non-lights
+
+				final Vec sw = s.p.minus(x);
+				final Vec su = ((Math.abs(sw.x) > .1 ? new Vec(0, 1, 0) : new Vec(1, 0, 0)).cross(sw)).norm();
+				final Vec sv = sw.cross(su);
+				final double cos_a_max = Math.sqrt(1 - s.rad * s.rad / (x.minus(s.p)).dot(x.minus(s.p)));
+				final double eps1 = random.nextDouble();
+				final double eps2 = random.nextDouble();
+				final double cos_a = 1 - eps1 + eps1 * cos_a_max;
+				final double sin_a = Math.sqrt(1 - cos_a * cos_a);
+				final double phi = 2 * Math.PI * eps2;
+				final Vec l = su.scale(Math.cos(phi) * sin_a).plus(sv.scale(Math.sin(phi) * sin_a)).plus(sw.scale(cos_a)).norm();
+				intersect(new Ray(x, l), intersection);
+				if (intersection.b && intersection.id == i) { // shadow ray
+					final double omega = 2 * Math.PI * (1 - cos_a_max);
+					e = e.plus(f.multiply(s.e.scale(l.dot(nl) * omega)).scale(1 / Math.PI));
+				}
+			}
+
+			return obj.e.scale(E).plus(e).plus(f.multiply(radiance(new Ray(x, d), depth, Xi, 0)));
 		} else if (obj.refl == Refl_t.SPEC) { // Ideal SPECULAR reflection
 			return obj.e.plus(f.multiply(radiance(new Ray(x, r.d.minus(n.scale(2 * n.dot(r.d)))), depth, Xi)));
 		}
@@ -117,7 +147,7 @@ class Smallpt {
 	public static void main(final String[] argv) throws IOException {
 		final int w = 768;
 		final int h = 768;
-		final int samps = argv.length == 2 ? Integer.valueOf(argv[1]) / 4 : 1; // # samples
+		final int samps = argv.length == 2 ? Integer.valueOf(argv[1]) / 4 : 4; // # samples
 		final Ray cam = new Ray(new Vec(50, 52, 295.6), new Vec(0, -0.042612, -1).norm()); // cam pos, dir
 		final Vec cx = new Vec(w * .5135 / h, 0, 0);
 		final Vec cy = (cx.cross(cam.d)).norm().scale(.5135);
