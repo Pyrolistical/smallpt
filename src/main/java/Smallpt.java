@@ -148,38 +148,47 @@ class Smallpt {
 	public static void main(final String[] argv) throws IOException {
 		final int w = argv.length == 3 ? Integer.valueOf(argv[0]) : 256; // # samples
 		final int h = argv.length == 3 ? Integer.valueOf(argv[1]) : 256; // # samples
-		final int samps = argv.length == 3 ? Integer.valueOf(argv[2]) / 4 : 1; // # samples
-		System.err.println(String.format("Options %dx%d with %d samples", w, h, samps));
-		final Ray cam = new Ray(new Vector(50, 52, 295.6), new Vector(0, -0.042612, -1).norm()); // cam pos, dir
+		final int samples = argv.length == 3 ? Integer.valueOf(argv[2]) / 4 : 1; // # samples
+		System.err.println(String.format("Options %dx%d with %d samples", w, h, samples));
+		final Ray camera = new Ray(new Vector(50, 52, 295.6), new Vector(0, -0.042612, -1).norm()); // cam pos, dir
 		final Vector cx = new Vector(w * .5135 / h, 0, 0);
-		final Vector cy = (cx.cross(cam.direction)).norm().scale(.5135);
-		final Vector[][] c = new Vector[h][];
-		// final omp parallel for schedule(dynamic, 1) private(r) // OpenMP
+		final Vector cy = (cx.cross(camera.direction)).norm().scale(.5135);
+		final Vector[][] image = renderImage(w, h, samples, camera, cx, cy);
+		writeImage(w, h, image);
+
+	}
+
+	private static Vector[][] renderImage(final int w, final int h, final int samples, final Ray camera, final Vector cx, final Vector cy) {
+		final Vector[][] image = new Vector[h][];
 		for (int y = 0; y < h; y++) { // Loop over image rows
-			System.err.println(String.format("\rRendering (%d spp) %5.2f%%", samps * 4, 100. * y / (h - 1)));
+			System.err.println(String.format("\rRendering (%d spp) %5.2f%%", samples * 4, 100. * y / (h - 1)));
 			for (int x = 0; x < w; x++) {
 				for (int sy = 0; sy < 2; sy++) {
 					Vector r = new Vector(0, 0, 0);
 					for (int sx = 0; sx < 2; sx++, r = new Vector(0, 0, 0)) { // 2x2 subpixel cols
-						for (int s = 0; s < samps; s++) {
+						for (int s = 0; s < samples; s++) {
 							final double r1 = 2 * random.nextDouble();
 							final double dx = r1 < 1 ? Math.sqrt(r1) - 1 : 1 - Math.sqrt(2 - r1);
 							final double r2 = 2 * random.nextDouble();
 							final double dy = r2 < 1 ? Math.sqrt(r2) - 1 : 1 - Math.sqrt(2 - r2);
-							final Vector d = cx.scale((((sx + .5 + dx) / 2 + x) / w - .5)).plus(cy.scale((((sy + .5 + dy) / 2 + y) / h - .5))).plus(cam.direction);
-							r = r.plus(radiance(new Ray(cam.origin.plus(d.scale(140)), d.norm()), 0).scale((1. / samps)));
+							final Vector d = cx.scale((((sx + .5 + dx) / 2 + x) / w - .5)).plus(cy.scale((((sy + .5 + dy) / 2 + y) / h - .5))).plus(camera.direction);
+							r = r.plus(radiance(new Ray(camera.origin.plus(d.scale(140)), d.norm()), 0).scale((1. / samples)));
 						} // Camera rays are pushed ^^^^^ forward to start in interior
-						if (c[y] == null) {
-							c[y] = new Vector[w];
+						if (image[y] == null) {
+							image[y] = new Vector[w];
 						}
-						if (c[y][x] == null) {
-							c[y][x] = new Vector(0, 0, 0);
+						if (image[y][x] == null) {
+							image[y][x] = new Vector(0, 0, 0);
 						}
-						c[y][x] = c[y][x].plus(new Vector(clamp(r.x), clamp(r.y), clamp(r.z)).scale(.25));
+						image[y][x] = image[y][x].plus(new Vector(clamp(r.x), clamp(r.y), clamp(r.z)).scale(.25));
 					}
 				}
 			}
 		}
+		return image;
+	}
+
+	private static void writeImage(final int w, final int h, final Vector[][] c) throws IOException {
 		final File f = new File("target/image.png"); // Write image to PPM file.
 
 		final BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
@@ -195,6 +204,5 @@ class Smallpt {
 		}
 
 		ImageIO.write(image, "png", f);
-
 	}
 }
