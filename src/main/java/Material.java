@@ -1,0 +1,3 @@
+enum Material {
+	DIFFUSE, SPECULAR, REFRACTIVE
+}

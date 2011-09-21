@@ -10,15 +10,15 @@ import javax.imageio.ImageIO;
 class Smallpt {
 
 	static Sphere spheres[] = {// Scene: radius, position, emission, color, material
-			new Sphere(1e5, new Vec(1e5 + 1, 40.8, 81.6), new Vec(0, 0, 0), new Vec(.75, .25, .25), Refl_t.DIFF),// Left
-			new Sphere(1e5, new Vec(-1e5 + 99, 40.8, 81.6), new Vec(0, 0, 0), new Vec(.25, .25, .75), Refl_t.DIFF),// Rght
-			new Sphere(1e5, new Vec(50, 40.8, 1e5), new Vec(0, 0, 0), new Vec(.75, .75, .75), Refl_t.DIFF),// Back
-			new Sphere(1e5, new Vec(50, 40.8, -1e5 + 170), new Vec(0, 0, 0), new Vec(0, 0, 0), Refl_t.DIFF),// Frnt
-			new Sphere(1e5, new Vec(50, 1e5, 81.6), new Vec(0, 0, 0), new Vec(.75, .75, .75), Refl_t.DIFF),// Botm
-			new Sphere(1e5, new Vec(50, -1e5 + 81.6, 81.6), new Vec(0, 0, 0), new Vec(.75, .75, .75), Refl_t.DIFF),// Top
-			new Sphere(16.5, new Vec(27, 16.5, 47), new Vec(0, 0, 0), new Vec(1, 1, 1).scale(.999), Refl_t.SPEC),// Mirr
-			new Sphere(16.5, new Vec(73, 16.5, 78), new Vec(0, 0, 0), new Vec(1, 1, 1).scale(.999), Refl_t.REFR),// Glas
-			new Sphere(1.5, new Vec(50, 81.6 - 16.5, 81.6), new Vec(400, 400, 400), new Vec(0, 0, 0), Refl_t.DIFF)
+			new Sphere(1e5, new Vector(1e5 + 1, 40.8, 81.6), new Vector(0, 0, 0), new Vector(.75, .25, .25), Material.DIFFUSE),// Left
+			new Sphere(1e5, new Vector(-1e5 + 99, 40.8, 81.6), new Vector(0, 0, 0), new Vector(.25, .25, .75), Material.DIFFUSE),// Rght
+			new Sphere(1e5, new Vector(50, 40.8, 1e5), new Vector(0, 0, 0), new Vector(.75, .75, .75), Material.DIFFUSE),// Back
+			new Sphere(1e5, new Vector(50, 40.8, -1e5 + 170), new Vector(0, 0, 0), new Vector(0, 0, 0), Material.DIFFUSE),// Frnt
+			new Sphere(1e5, new Vector(50, 1e5, 81.6), new Vector(0, 0, 0), new Vector(.75, .75, .75), Material.DIFFUSE),// Botm
+			new Sphere(1e5, new Vector(50, -1e5 + 81.6, 81.6), new Vector(0, 0, 0), new Vector(.75, .75, .75), Material.DIFFUSE),// Top
+			new Sphere(16.5, new Vector(27, 16.5, 47), new Vector(0, 0, 0), new Vector(1, 1, 1).scale(.999), Material.SPECULAR),// Mirr
+			new Sphere(16.5, new Vector(73, 16.5, 78), new Vector(0, 0, 0), new Vector(1, 1, 1).scale(.999), Material.REFRACTIVE),// Glas
+			new Sphere(1.5, new Vector(50, 81.6 - 16.5, 81.6), new Vector(400, 400, 400), new Vector(0, 0, 0), Material.DIFFUSE)
 	// Lite
 	};
 
@@ -44,21 +44,21 @@ class Smallpt {
 
 	public static final Random random = new Random(1337);
 
-	static Vec radiance(final Ray r, final int depth, final int Xi) {
+	static Vector radiance(final Ray r, final int depth, final int Xi) {
 		return radiance(r, depth, Xi, 1);
 	}
 
-	static Vec radiance(final Ray r, int depth, final int Xi, final int E) {
+	static Vector radiance(final Ray r, int depth, final int Xi, final int E) {
 		final Intersection intersection = new Intersection();
 		intersect(r, intersection);
 		if (!intersection.b) {
-			return new Vec(0, 0, 0);
+			return new Vector(0, 0, 0);
 		} // if miss, return black
 		final Sphere obj = spheres[intersection.id]; // the hit object
-		final Vec x = r.o.plus(r.d.scale(intersection.t));
-		final Vec n = (x.minus(obj.p)).norm();
-		final Vec nl = n.dot(r.d) < 0 ? n : n.scale(-1);
-		Vec f = obj.c;
+		final Vector x = r.o.plus(r.d.scale(intersection.t));
+		final Vector n = (x.minus(obj.p)).norm();
+		final Vector nl = n.dot(r.d) < 0 ? n : n.scale(-1);
+		Vector f = obj.c;
 		final double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
 		if (++depth > 5 || p == 0) {
 			if (random.nextDouble() < p) {
@@ -67,33 +67,33 @@ class Smallpt {
 				return obj.e.scale(E);
 			}
 		} // R.R.
-		if (obj.refl == Refl_t.DIFF) { // Ideal DIFFUSE reflection
+		if (obj.refl == Material.DIFFUSE) { // Ideal DIFFUSE reflection
 			final double r1 = 2 * Math.PI * random.nextDouble();
 			final double r2 = random.nextDouble();
 			final double r2s = Math.sqrt(r2);
-			final Vec w = nl;
-			final Vec u = ((Math.abs(w.x) > .1 ? new Vec(0, 1, 0) : new Vec(1, 0, 0)).cross(w)).norm();
-			final Vec v = w.cross(u);
-			final Vec d = (u.scale(Math.cos(r1) * r2s).plus(v.scale(Math.sin(r1) * r2s)).plus(w.scale(Math.sqrt(1 - r2)))).norm();
+			final Vector w = nl;
+			final Vector u = ((Math.abs(w.x) > .1 ? new Vector(0, 1, 0) : new Vector(1, 0, 0)).cross(w)).norm();
+			final Vector v = w.cross(u);
+			final Vector d = (u.scale(Math.cos(r1) * r2s).plus(v.scale(Math.sin(r1) * r2s)).plus(w.scale(Math.sqrt(1 - r2)))).norm();
 
 			// Loop over any lights
-			Vec e = new Vec(0, 0, 0);
+			Vector e = new Vector(0, 0, 0);
 			for (int i = 0; i < spheres.length; i++) {
 				final Sphere s = spheres[i];
 				if (s.e.x <= 0 && s.e.y <= 0 && s.e.z <= 0) {
 					continue;
 				} // skip non-lights
 
-				final Vec sw = s.p.minus(x);
-				final Vec su = ((Math.abs(sw.x) > .1 ? new Vec(0, 1, 0) : new Vec(1, 0, 0)).cross(sw)).norm();
-				final Vec sv = sw.cross(su);
+				final Vector sw = s.p.minus(x);
+				final Vector su = ((Math.abs(sw.x) > .1 ? new Vector(0, 1, 0) : new Vector(1, 0, 0)).cross(sw)).norm();
+				final Vector sv = sw.cross(su);
 				final double cos_a_max = Math.sqrt(1 - s.rad * s.rad / (x.minus(s.p)).dot(x.minus(s.p)));
 				final double eps1 = random.nextDouble();
 				final double eps2 = random.nextDouble();
 				final double cos_a = 1 - eps1 + eps1 * cos_a_max;
 				final double sin_a = Math.sqrt(1 - cos_a * cos_a);
 				final double phi = 2 * Math.PI * eps2;
-				final Vec l = su.scale(Math.cos(phi) * sin_a).plus(sv.scale(Math.sin(phi) * sin_a)).plus(sw.scale(cos_a)).norm();
+				final Vector l = su.scale(Math.cos(phi) * sin_a).plus(sv.scale(Math.sin(phi) * sin_a)).plus(sw.scale(cos_a)).norm();
 				intersect(new Ray(x, l), intersection);
 				if (intersection.b && intersection.id == i) { // shadow ray
 					final double omega = 2 * Math.PI * (1 - cos_a_max);
@@ -102,7 +102,7 @@ class Smallpt {
 			}
 
 			return obj.e.scale(E).plus(e).plus(f.multiply(radiance(new Ray(x, d), depth, Xi, 0)));
-		} else if (obj.refl == Refl_t.SPEC) { // Ideal SPECULAR reflection
+		} else if (obj.refl == Material.SPECULAR) { // Ideal SPECULAR reflection
 			return obj.e.plus(f.multiply(radiance(new Ray(x, r.d.minus(n.scale(2 * n.dot(r.d)))), depth, Xi)));
 		}
 		final Ray reflRay = new Ray(x, r.d.minus(n.scale(2 * n.dot(r.d)))); // Ideal dielectric REFRACTION
@@ -115,7 +115,7 @@ class Smallpt {
 		if (cos2t < 0) {
 			return obj.e.plus(f.multiply(radiance(reflRay, depth, Xi)));
 		}
-		final Vec tdir = (r.d.scale(nnt).minus(n.scale(((into ? 1 : -1) * (ddn * nnt + Math.sqrt(cos2t)))))).norm();
+		final Vector tdir = (r.d.scale(nnt).minus(n.scale(((into ? 1 : -1) * (ddn * nnt + Math.sqrt(cos2t)))))).norm();
 		final double a = nt - nc;
 		final double b = nt + nc;
 		final double R0 = a * a / (b * b);
@@ -125,11 +125,11 @@ class Smallpt {
 		final double P = .25 + .5 * Re;
 		final double RP = Re / P;
 		final double TP = Tr / (1 - P);
-		final Vec xx = getXX(depth, Xi, x, reflRay, tdir, Re, Tr, P, RP, TP);
+		final Vector xx = getXX(depth, Xi, x, reflRay, tdir, Re, Tr, P, RP, TP);
 		return obj.e.plus(f.multiply(xx));
 	}
 
-	private static Vec getXX(final int depth, final int Xi, final Vec x, final Ray reflRay, final Vec tdir, final double Re, final double Tr, final double P, final double RP, final double TP) {
+	private static Vector getXX(final int depth, final int Xi, final Vector x, final Ray reflRay, final Vector tdir, final double Re, final double Tr, final double P, final double RP, final double TP) {
 		if (depth > 2) {
 			if (random.nextDouble() < P) { // Russian roulette
 				return radiance(reflRay, depth, Xi).scale(RP);
@@ -146,33 +146,33 @@ class Smallpt {
 		final int h = argv.length == 3 ? Integer.valueOf(argv[1]) : 256; // # samples
 		final int samps = argv.length == 3 ? Integer.valueOf(argv[2]) / 4 : 1; // # samples
 		System.err.println(String.format("Options %dx%d with %d samples", w, h, samps));
-		final Ray cam = new Ray(new Vec(50, 52, 295.6), new Vec(0, -0.042612, -1).norm()); // cam pos, dir
-		final Vec cx = new Vec(w * .5135 / h, 0, 0);
-		final Vec cy = (cx.cross(cam.d)).norm().scale(.5135);
-		final Vec[][] c = new Vec[h][];
+		final Ray cam = new Ray(new Vector(50, 52, 295.6), new Vector(0, -0.042612, -1).norm()); // cam pos, dir
+		final Vector cx = new Vector(w * .5135 / h, 0, 0);
+		final Vector cy = (cx.cross(cam.d)).norm().scale(.5135);
+		final Vector[][] c = new Vector[h][];
 		final int Xi = 0;
 		// final omp parallel for schedule(dynamic, 1) private(r) // OpenMP
 		for (int y = 0; y < h; y++) { // Loop over image rows
 			System.err.println(String.format("\rRendering (%d spp) %5.2f%%", samps * 4, 100. * y / (h - 1)));
 			for (int x = 0; x < w; x++) {
 				for (int sy = 0, i = (h - y - 1) * w + x; sy < 2; sy++) {
-					Vec r = new Vec(0, 0, 0);
-					for (int sx = 0; sx < 2; sx++, r = new Vec(0, 0, 0)) { // 2x2 subpixel cols
+					Vector r = new Vector(0, 0, 0);
+					for (int sx = 0; sx < 2; sx++, r = new Vector(0, 0, 0)) { // 2x2 subpixel cols
 						for (int s = 0; s < samps; s++) {
 							final double r1 = 2 * random.nextDouble();
 							final double dx = r1 < 1 ? Math.sqrt(r1) - 1 : 1 - Math.sqrt(2 - r1);
 							final double r2 = 2 * random.nextDouble();
 							final double dy = r2 < 1 ? Math.sqrt(r2) - 1 : 1 - Math.sqrt(2 - r2);
-							final Vec d = cx.scale((((sx + .5 + dx) / 2 + x) / w - .5)).plus(cy.scale((((sy + .5 + dy) / 2 + y) / h - .5))).plus(cam.d);
+							final Vector d = cx.scale((((sx + .5 + dx) / 2 + x) / w - .5)).plus(cy.scale((((sy + .5 + dy) / 2 + y) / h - .5))).plus(cam.d);
 							r = r.plus(radiance(new Ray(cam.o.plus(d.scale(140)), d.norm()), 0, Xi).scale((1. / samps)));
 						} // Camera rays are pushed ^^^^^ forward to start in interior
 						if (c[y] == null) {
-							c[y] = new Vec[w];
+							c[y] = new Vector[w];
 						}
 						if (c[y][x] == null) {
-							c[y][x] = new Vec(0, 0, 0);
+							c[y][x] = new Vector(0, 0, 0);
 						}
-						c[y][x] = c[y][x].plus(new Vec(clamp(r.x), clamp(r.y), clamp(r.z)).scale(.25));
+						c[y][x] = c[y][x].plus(new Vector(clamp(r.x), clamp(r.y), clamp(r.z)).scale(.25));
 					}
 				}
 			}
