@@ -16,8 +16,8 @@ class Smallpt {
 			new Sphere(1e5, new Vector(50, 40.8, -1e5 + 170), new Vector(0, 0, 0), new Vector(0, 0, 0), Material.DIFFUSE),// Frnt
 			new Sphere(1e5, new Vector(50, 1e5, 81.6), new Vector(0, 0, 0), new Vector(.75, .75, .75), Material.DIFFUSE),// Botm
 			new Sphere(1e5, new Vector(50, -1e5 + 81.6, 81.6), new Vector(0, 0, 0), new Vector(.75, .75, .75), Material.DIFFUSE),// Top
-			new Sphere(16.5, new Vector(27, 16.5, 47), new Vector(0, 0, 0), new Vector(1, 1, 1).scale(.999), Material.SPECULAR),// Mirr
-			new Sphere(16.5, new Vector(73, 16.5, 78), new Vector(0, 0, 0), new Vector(1, 1, 1).scale(.999), Material.REFRACTIVE),// Glas
+			new Sphere(16.5, new Vector(27, 16.5, 47), new Vector(0, 0, 0), new Vector(.999, .999, .999), Material.SPECULAR),// Mirr
+			new Sphere(16.5, new Vector(73, 16.5, 78), new Vector(0, 0, 0), new Vector(.999, .999, .999), Material.REFRACTIVE),// Glas
 			new Sphere(1.5, new Vector(50, 81.6 - 16.5, 81.6), new Vector(400, 400, 400), new Vector(0, 0, 0), Material.DIFFUSE)
 	// Lite
 	};
@@ -26,8 +26,12 @@ class Smallpt {
 		return x < 0 ? 0 : x > 1 ? 1 : x;
 	}
 
+	static double increaseBrightness(final double x) {
+		return Math.pow(clamp(x), 1 / 2.2);
+	}
+
 	static int toInt(final double x) {
-		return (int) (Math.pow(clamp(x), 1 / 2.2) * 255 + .5);
+		return (int) (clamp(x) * 255 + .5);
 	}
 
 	static void intersect(final Ray r, final Intersection intersection) {
@@ -44,11 +48,11 @@ class Smallpt {
 
 	public static final Random random = new Random(1337);
 
-	static Vector radiance(final Ray r, final int depth, final int Xi) {
-		return radiance(r, depth, Xi, 1);
+	static Vector radiance(final Ray r, final int depth) {
+		return radiance(r, depth, 1);
 	}
 
-	static Vector radiance(final Ray r, int depth, final int Xi, final int E) {
+	static Vector radiance(final Ray r, int depth, final int E) {
 		final Intersection intersection = new Intersection();
 		intersect(r, intersection);
 		if (!intersection.b) {
@@ -101,9 +105,9 @@ class Smallpt {
 				}
 			}
 
-			return obj.emission.scale(E).plus(e).plus(f.multiply(radiance(new Ray(x, d), depth, Xi, 0)));
+			return obj.emission.scale(E).plus(e).plus(f.multiply(radiance(new Ray(x, d), depth, 0)));
 		} else if (obj.material == Material.SPECULAR) { // Ideal SPECULAR reflection
-			return obj.emission.plus(f.multiply(radiance(new Ray(x, r.direction.minus(n.scale(2 * n.dot(r.direction)))), depth, Xi)));
+			return obj.emission.plus(f.multiply(radiance(new Ray(x, r.direction.minus(n.scale(2 * n.dot(r.direction)))), depth)));
 		}
 		final Ray reflRay = new Ray(x, r.direction.minus(n.scale(2 * n.dot(r.direction)))); // Ideal dielectric REFRACTION
 		final boolean into = n.dot(nl) > 0; // Ray from outside going in?
@@ -113,7 +117,7 @@ class Smallpt {
 		final double ddn = r.direction.dot(nl);
 		final double cos2t = 1 - nnt * nnt * (1 - ddn * ddn);
 		if (cos2t < 0) {
-			return obj.emission.plus(f.multiply(radiance(reflRay, depth, Xi)));
+			return obj.emission.plus(f.multiply(radiance(reflRay, depth)));
 		}
 		final Vector tdir = (r.direction.scale(nnt).minus(n.scale(((into ? 1 : -1) * (ddn * nnt + Math.sqrt(cos2t)))))).norm();
 		final double a = nt - nc;
@@ -125,19 +129,19 @@ class Smallpt {
 		final double P = .25 + .5 * Re;
 		final double RP = Re / P;
 		final double TP = Tr / (1 - P);
-		final Vector xx = getXX(depth, Xi, x, reflRay, tdir, Re, Tr, P, RP, TP);
+		final Vector xx = getXX(depth, x, reflRay, tdir, Re, Tr, P, RP, TP);
 		return obj.emission.plus(f.multiply(xx));
 	}
 
-	private static Vector getXX(final int depth, final int Xi, final Vector x, final Ray reflRay, final Vector tdir, final double Re, final double Tr, final double P, final double RP, final double TP) {
+	private static Vector getXX(final int depth, final Vector x, final Ray reflRay, final Vector tdir, final double Re, final double Tr, final double P, final double RP, final double TP) {
 		if (depth > 2) {
 			if (random.nextDouble() < P) { // Russian roulette
-				return radiance(reflRay, depth, Xi).scale(RP);
+				return radiance(reflRay, depth).scale(RP);
 			} else {
-				return radiance(new Ray(x, tdir), depth, Xi).scale(TP);
+				return radiance(new Ray(x, tdir), depth).scale(TP);
 			}
 		} else {
-			return radiance(reflRay, depth, Xi).scale(Re).plus(radiance(new Ray(x, tdir), depth, Xi).scale(Tr));
+			return radiance(reflRay, depth).scale(Re).plus(radiance(new Ray(x, tdir), depth).scale(Tr));
 		}
 	}
 
@@ -150,12 +154,11 @@ class Smallpt {
 		final Vector cx = new Vector(w * .5135 / h, 0, 0);
 		final Vector cy = (cx.cross(cam.direction)).norm().scale(.5135);
 		final Vector[][] c = new Vector[h][];
-		final int Xi = 0;
 		// final omp parallel for schedule(dynamic, 1) private(r) // OpenMP
 		for (int y = 0; y < h; y++) { // Loop over image rows
 			System.err.println(String.format("\rRendering (%d spp) %5.2f%%", samps * 4, 100. * y / (h - 1)));
 			for (int x = 0; x < w; x++) {
-				for (int sy = 0, i = (h - y - 1) * w + x; sy < 2; sy++) {
+				for (int sy = 0; sy < 2; sy++) {
 					Vector r = new Vector(0, 0, 0);
 					for (int sx = 0; sx < 2; sx++, r = new Vector(0, 0, 0)) { // 2x2 subpixel cols
 						for (int s = 0; s < samps; s++) {
@@ -164,7 +167,7 @@ class Smallpt {
 							final double r2 = 2 * random.nextDouble();
 							final double dy = r2 < 1 ? Math.sqrt(r2) - 1 : 1 - Math.sqrt(2 - r2);
 							final Vector d = cx.scale((((sx + .5 + dx) / 2 + x) / w - .5)).plus(cy.scale((((sy + .5 + dy) / 2 + y) / h - .5))).plus(cam.direction);
-							r = r.plus(radiance(new Ray(cam.origin.plus(d.scale(140)), d.norm()), 0, Xi).scale((1. / samps)));
+							r = r.plus(radiance(new Ray(cam.origin.plus(d.scale(140)), d.norm()), 0).scale((1. / samps)));
 						} // Camera rays are pushed ^^^^^ forward to start in interior
 						if (c[y] == null) {
 							c[y] = new Vector[w];
@@ -184,9 +187,9 @@ class Smallpt {
 		for (int y = 0; y < c.length; y++) {
 			for (int x = 0; x < c[0].length; x++) {
 				final int a[] = new int[3];
-				a[0] = toInt(c[y][x].x);
-				a[1] = toInt(c[y][x].y);
-				a[2] = toInt(c[y][x].z);
+				a[0] = toInt(increaseBrightness(c[y][x].x));
+				a[1] = toInt(increaseBrightness(c[y][x].y));
+				a[2] = toInt(increaseBrightness(c[y][x].z));
 				image.setRGB(x, c.length - y - 1, new Color(a[0], a[1], a[2]).getRGB());
 			}
 		}
