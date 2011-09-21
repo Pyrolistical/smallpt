@@ -1,8 +1,9 @@
 class Ray {
-	Vector o, d;
+	final Vector origin;
+	final Vector direction;
 
 	Ray(final Vector o_, final Vector d_) {
-		o = o_;
-		d = d_;
+		origin = o_;
+		direction = d_;
 	}
 }

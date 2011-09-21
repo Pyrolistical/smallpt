@@ -1,5 +1,7 @@
 class Vector {
-	final double x, y, z; // position, also color (r,g,b)
+	final double x;
+	final double y;
+	final double z;
 
 	Vector(final double x_, final double y_, final double z_) {
 		x = x_;
@@ -24,7 +26,15 @@ class Vector {
 	}
 
 	Vector norm() {
-		return scale(1 / Math.sqrt(dot(this)));
+		return scale(1 / length());
+	}
+
+	double length() {
+		return Math.sqrt(squaredLength());
+	}
+
+	double squaredLength() {
+		return dot(this);
 	}
 
 	double dot(final Vector b) {

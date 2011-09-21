@@ -55,19 +55,19 @@ class Smallpt {
 			return new Vector(0, 0, 0);
 		} // if miss, return black
 		final Sphere obj = spheres[intersection.id]; // the hit object
-		final Vector x = r.o.plus(r.d.scale(intersection.t));
-		final Vector n = (x.minus(obj.p)).norm();
-		final Vector nl = n.dot(r.d) < 0 ? n : n.scale(-1);
-		Vector f = obj.c;
+		final Vector x = r.origin.plus(r.direction.scale(intersection.t));
+		final Vector n = (x.minus(obj.center)).norm();
+		final Vector nl = n.dot(r.direction) < 0 ? n : n.scale(-1);
+		Vector f = obj.color;
 		final double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
 		if (++depth > 5 || p == 0) {
 			if (random.nextDouble() < p) {
 				f = f.scale(1 / p);
 			} else {
-				return obj.e.scale(E);
+				return obj.emission.scale(E);
 			}
 		} // R.R.
-		if (obj.refl == Material.DIFFUSE) { // Ideal DIFFUSE reflection
+		if (obj.material == Material.DIFFUSE) { // Ideal DIFFUSE reflection
 			final double r1 = 2 * Math.PI * random.nextDouble();
 			final double r2 = random.nextDouble();
 			final double r2s = Math.sqrt(r2);
@@ -80,14 +80,14 @@ class Smallpt {
 			Vector e = new Vector(0, 0, 0);
 			for (int i = 0; i < spheres.length; i++) {
 				final Sphere s = spheres[i];
-				if (s.e.x <= 0 && s.e.y <= 0 && s.e.z <= 0) {
+				if (s.emission.x <= 0 && s.emission.y <= 0 && s.emission.z <= 0) {
 					continue;
 				} // skip non-lights
 
-				final Vector sw = s.p.minus(x);
+				final Vector sw = s.center.minus(x);
 				final Vector su = ((Math.abs(sw.x) > .1 ? new Vector(0, 1, 0) : new Vector(1, 0, 0)).cross(sw)).norm();
 				final Vector sv = sw.cross(su);
-				final double cos_a_max = Math.sqrt(1 - s.rad * s.rad / (x.minus(s.p)).dot(x.minus(s.p)));
+				final double cos_a_max = Math.sqrt(1 - s.radius * s.radius / (x.minus(s.center)).dot(x.minus(s.center)));
 				final double eps1 = random.nextDouble();
 				final double eps2 = random.nextDouble();
 				final double cos_a = 1 - eps1 + eps1 * cos_a_max;
@@ -97,25 +97,25 @@ class Smallpt {
 				intersect(new Ray(x, l), intersection);
 				if (intersection.b && intersection.id == i) { // shadow ray
 					final double omega = 2 * Math.PI * (1 - cos_a_max);
-					e = e.plus(f.multiply(s.e.scale(l.dot(nl) * omega)).scale(1 / Math.PI));
+					e = e.plus(f.multiply(s.emission.scale(l.dot(nl) * omega)).scale(1 / Math.PI));
 				}
 			}
 
-			return obj.e.scale(E).plus(e).plus(f.multiply(radiance(new Ray(x, d), depth, Xi, 0)));
-		} else if (obj.refl == Material.SPECULAR) { // Ideal SPECULAR reflection
-			return obj.e.plus(f.multiply(radiance(new Ray(x, r.d.minus(n.scale(2 * n.dot(r.d)))), depth, Xi)));
+			return obj.emission.scale(E).plus(e).plus(f.multiply(radiance(new Ray(x, d), depth, Xi, 0)));
+		} else if (obj.material == Material.SPECULAR) { // Ideal SPECULAR reflection
+			return obj.emission.plus(f.multiply(radiance(new Ray(x, r.direction.minus(n.scale(2 * n.dot(r.direction)))), depth, Xi)));
 		}
-		final Ray reflRay = new Ray(x, r.d.minus(n.scale(2 * n.dot(r.d)))); // Ideal dielectric REFRACTION
+		final Ray reflRay = new Ray(x, r.direction.minus(n.scale(2 * n.dot(r.direction)))); // Ideal dielectric REFRACTION
 		final boolean into = n.dot(nl) > 0; // Ray from outside going in?
 		final double nc = 1;
 		final double nt = 1.5;
 		final double nnt = into ? nc / nt : nt / nc;
-		final double ddn = r.d.dot(nl);
+		final double ddn = r.direction.dot(nl);
 		final double cos2t = 1 - nnt * nnt * (1 - ddn * ddn);
 		if (cos2t < 0) {
-			return obj.e.plus(f.multiply(radiance(reflRay, depth, Xi)));
+			return obj.emission.plus(f.multiply(radiance(reflRay, depth, Xi)));
 		}
-		final Vector tdir = (r.d.scale(nnt).minus(n.scale(((into ? 1 : -1) * (ddn * nnt + Math.sqrt(cos2t)))))).norm();
+		final Vector tdir = (r.direction.scale(nnt).minus(n.scale(((into ? 1 : -1) * (ddn * nnt + Math.sqrt(cos2t)))))).norm();
 		final double a = nt - nc;
 		final double b = nt + nc;
 		final double R0 = a * a / (b * b);
@@ -126,7 +126,7 @@ class Smallpt {
 		final double RP = Re / P;
 		final double TP = Tr / (1 - P);
 		final Vector xx = getXX(depth, Xi, x, reflRay, tdir, Re, Tr, P, RP, TP);
-		return obj.e.plus(f.multiply(xx));
+		return obj.emission.plus(f.multiply(xx));
 	}
 
 	private static Vector getXX(final int depth, final int Xi, final Vector x, final Ray reflRay, final Vector tdir, final double Re, final double Tr, final double P, final double RP, final double TP) {
@@ -148,7 +148,7 @@ class Smallpt {
 		System.err.println(String.format("Options %dx%d with %d samples", w, h, samps));
 		final Ray cam = new Ray(new Vector(50, 52, 295.6), new Vector(0, -0.042612, -1).norm()); // cam pos, dir
 		final Vector cx = new Vector(w * .5135 / h, 0, 0);
-		final Vector cy = (cx.cross(cam.d)).norm().scale(.5135);
+		final Vector cy = (cx.cross(cam.direction)).norm().scale(.5135);
 		final Vector[][] c = new Vector[h][];
 		final int Xi = 0;
 		// final omp parallel for schedule(dynamic, 1) private(r) // OpenMP
@@ -163,8 +163,8 @@ class Smallpt {
 							final double dx = r1 < 1 ? Math.sqrt(r1) - 1 : 1 - Math.sqrt(2 - r1);
 							final double r2 = 2 * random.nextDouble();
 							final double dy = r2 < 1 ? Math.sqrt(r2) - 1 : 1 - Math.sqrt(2 - r2);
-							final Vector d = cx.scale((((sx + .5 + dx) / 2 + x) / w - .5)).plus(cy.scale((((sy + .5 + dy) / 2 + y) / h - .5))).plus(cam.d);
-							r = r.plus(radiance(new Ray(cam.o.plus(d.scale(140)), d.norm()), 0, Xi).scale((1. / samps)));
+							final Vector d = cx.scale((((sx + .5 + dx) / 2 + x) / w - .5)).plus(cy.scale((((sy + .5 + dy) / 2 + y) / h - .5))).plus(cam.direction);
+							r = r.plus(radiance(new Ray(cam.origin.plus(d.scale(140)), d.norm()), 0, Xi).scale((1. / samps)));
 						} // Camera rays are pushed ^^^^^ forward to start in interior
 						if (c[y] == null) {
 							c[y] = new Vector[w];
