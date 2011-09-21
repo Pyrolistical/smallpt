@@ -7,9 +7,6 @@ import java.util.Random;
 import javax.imageio.ImageIO;
 
 // smallpt, a Path Tracer by Kevin Beason, 2008
-// Make : g++ -O3 -fopenmp smallpt.cpp -o smallpt
-// Remove "-fopenmp" for g++ version < 4.2
-// Usage: time ./smallpt 5000 && xv image.ppm
 class Smallpt {
 
 	static Sphere spheres[] = {// Scene: radius, position, emission, color, material
@@ -145,13 +142,13 @@ class Smallpt {
 	}
 
 	public static void main(final String[] argv) throws IOException {
-		final int w = 768;
-		final int h = 768;
-		final int samps = argv.length == 2 ? Integer.valueOf(argv[1]) / 4 : 4; // # samples
+		final int w = argv.length == 3 ? Integer.valueOf(argv[0]) : 256; // # samples
+		final int h = argv.length == 3 ? Integer.valueOf(argv[1]) : 256; // # samples
+		final int samps = argv.length == 3 ? Integer.valueOf(argv[2]) / 4 : 1; // # samples
+		System.err.println(String.format("Options %dx%d with %d samples", w, h, samps));
 		final Ray cam = new Ray(new Vec(50, 52, 295.6), new Vec(0, -0.042612, -1).norm()); // cam pos, dir
 		final Vec cx = new Vec(w * .5135 / h, 0, 0);
 		final Vec cy = (cx.cross(cam.d)).norm().scale(.5135);
-		Vec r = new Vec(0, 0, 0);
 		final Vec[][] c = new Vec[h][];
 		final int Xi = 0;
 		// final omp parallel for schedule(dynamic, 1) private(r) // OpenMP
@@ -159,6 +156,7 @@ class Smallpt {
 			System.err.println(String.format("\rRendering (%d spp) %5.2f%%", samps * 4, 100. * y / (h - 1)));
 			for (int x = 0; x < w; x++) {
 				for (int sy = 0, i = (h - y - 1) * w + x; sy < 2; sy++) {
+					Vec r = new Vec(0, 0, 0);
 					for (int sx = 0; sx < 2; sx++, r = new Vec(0, 0, 0)) { // 2x2 subpixel cols
 						for (int s = 0; s < samps; s++) {
 							final double r1 = 2 * random.nextDouble();
@@ -195,14 +193,5 @@ class Smallpt {
 
 		ImageIO.write(image, "png", f);
 
-		// final BufferedWriter bw = new BufferedWriter(new FileWriter(f));
-		// try {
-		// bw.write(String.format("P3\n%d %d\n%d\n", w, h, 255));
-		// for (int i = 0; i < w * h; i++) {
-		// bw.write(String.format("%d %d %d ", toInt(c[i].x), toInt(c[i].y), toInt(c[i].z)));
-		// }
-		// } finally {
-		// bw.close();
-		// }
 	}
 }
