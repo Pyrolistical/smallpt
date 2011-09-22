@@ -6,4 +6,8 @@ class Ray {
 		origin = o_;
 		direction = d_;
 	}
+
+	Vector getVector(final double t) {
+		return origin.plus(direction.scale(t));
+	}
 }

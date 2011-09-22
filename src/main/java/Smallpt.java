@@ -59,9 +59,9 @@ class Smallpt {
 			return new Vector(0, 0, 0);
 		} // if miss, return black
 		final Sphere obj = spheres[intersection.id]; // the hit object
-		final Vector x = r.origin.plus(r.direction.scale(intersection.t));
-		final Vector n = (x.minus(obj.center)).norm();
-		final Vector nl = n.dot(r.direction) < 0 ? n : n.scale(-1);
+		final Vector intersectionPoint = r.getVector(intersection.t);
+		final Vector normal = intersectionPoint.minus(obj.center).norm();
+		final Vector nl = normal.dot(r.direction) < 0 ? normal : normal.scale(-1);
 		Vector f = obj.color;
 		final double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
 		if (++depth > 5 || p == 0) {
@@ -72,45 +72,57 @@ class Smallpt {
 			}
 		} // R.R.
 		if (obj.material == Material.DIFFUSE) { // Ideal DIFFUSE reflection
-			final double r1 = 2 * Math.PI * random.nextDouble();
-			final double r2 = random.nextDouble();
-			final double r2s = Math.sqrt(r2);
-			final Vector w = nl;
-			final Vector u = ((Math.abs(w.x) > .1 ? new Vector(0, 1, 0) : new Vector(1, 0, 0)).cross(w)).norm();
-			final Vector v = w.cross(u);
-			final Vector d = (u.scale(Math.cos(r1) * r2s).plus(v.scale(Math.sin(r1) * r2s)).plus(w.scale(Math.sqrt(1 - r2)))).norm();
-
-			// Loop over any lights
-			Vector e = new Vector(0, 0, 0);
-			for (int i = 0; i < spheres.length; i++) {
-				final Sphere s = spheres[i];
-				if (s.emission.x <= 0 && s.emission.y <= 0 && s.emission.z <= 0) {
-					continue;
-				} // skip non-lights
-
-				final Vector sw = s.center.minus(x);
-				final Vector su = ((Math.abs(sw.x) > .1 ? new Vector(0, 1, 0) : new Vector(1, 0, 0)).cross(sw)).norm();
-				final Vector sv = sw.cross(su);
-				final double cos_a_max = Math.sqrt(1 - s.radius * s.radius / (x.minus(s.center)).dot(x.minus(s.center)));
-				final double eps1 = random.nextDouble();
-				final double eps2 = random.nextDouble();
-				final double cos_a = 1 - eps1 + eps1 * cos_a_max;
-				final double sin_a = Math.sqrt(1 - cos_a * cos_a);
-				final double phi = 2 * Math.PI * eps2;
-				final Vector l = su.scale(Math.cos(phi) * sin_a).plus(sv.scale(Math.sin(phi) * sin_a)).plus(sw.scale(cos_a)).norm();
-				intersect(new Ray(x, l), intersection);
-				if (intersection.b && intersection.id == i) { // shadow ray
-					final double omega = 2 * Math.PI * (1 - cos_a_max);
-					e = e.plus(f.multiply(s.emission.scale(l.dot(nl) * omega)).scale(1 / Math.PI));
-				}
-			}
-
-			return obj.emission.scale(E).plus(e).plus(f.multiply(radiance(new Ray(x, d), depth, 0)));
+			return diffuse(depth, E, intersection, obj, intersectionPoint, nl, f);
 		} else if (obj.material == Material.SPECULAR) { // Ideal SPECULAR reflection
-			return obj.emission.plus(f.multiply(radiance(new Ray(x, r.direction.minus(n.scale(2 * n.dot(r.direction)))), depth)));
+			return specular(r, depth, obj, intersectionPoint, normal, f);
 		}
-		final Ray reflRay = new Ray(x, r.direction.minus(n.scale(2 * n.dot(r.direction)))); // Ideal dielectric REFRACTION
-		final boolean into = n.dot(nl) > 0; // Ray from outside going in?
+		return refraction(r, depth, obj, intersectionPoint, normal, nl, f);
+	}
+
+	private static Vector diffuse(final int depth, final int E, final Intersection intersection, final Sphere obj, final Vector intersectionPoint, final Vector nl, final Vector f) {
+		final double r1 = 2 * Math.PI * random.nextDouble();
+		final double r2 = random.nextDouble();
+		final double r2s = Math.sqrt(r2);
+		final Vector w = nl;
+		final Vector u = ((Math.abs(w.x) > .1 ? new Vector(0, 1, 0) : new Vector(1, 0, 0)).cross(w)).norm();
+		final Vector v = w.cross(u);
+		final Vector d = (u.scale(Math.cos(r1) * r2s).plus(v.scale(Math.sin(r1) * r2s)).plus(w.scale(Math.sqrt(1 - r2)))).norm();
+
+		// Loop over any lights
+		Vector e = new Vector(0, 0, 0);
+		for (int i = 0; i < spheres.length; i++) {
+			final Sphere s = spheres[i];
+			if (s.emission.x <= 0 && s.emission.y <= 0 && s.emission.z <= 0) {
+				continue;
+			} // skip non-lights
+
+			final Vector sw = s.center.minus(intersectionPoint);
+			final Vector su = ((Math.abs(sw.x) > .1 ? new Vector(0, 1, 0) : new Vector(1, 0, 0)).cross(sw)).norm();
+			final Vector sv = sw.cross(su);
+			final double cos_a_max = Math.sqrt(1 - s.radius * s.radius / (intersectionPoint.minus(s.center)).dot(intersectionPoint.minus(s.center)));
+			final double eps1 = random.nextDouble();
+			final double eps2 = random.nextDouble();
+			final double cos_a = 1 - eps1 + eps1 * cos_a_max;
+			final double sin_a = Math.sqrt(1 - cos_a * cos_a);
+			final double phi = 2 * Math.PI * eps2;
+			final Vector l = su.scale(Math.cos(phi) * sin_a).plus(sv.scale(Math.sin(phi) * sin_a)).plus(sw.scale(cos_a)).norm();
+			intersect(new Ray(intersectionPoint, l), intersection);
+			if (intersection.b && intersection.id == i) { // shadow ray
+				final double omega = 2 * Math.PI * (1 - cos_a_max);
+				e = e.plus(f.multiply(s.emission.scale(l.dot(nl) * omega)).scale(1 / Math.PI));
+			}
+		}
+
+		return obj.emission.scale(E).plus(e).plus(f.multiply(radiance(new Ray(intersectionPoint, d), depth, 0)));
+	}
+
+	private static Vector specular(final Ray r, final int depth, final Sphere obj, final Vector intersectionPoint, final Vector normal, final Vector f) {
+		return obj.emission.plus(f.multiply(radiance(new Ray(intersectionPoint, r.direction.minus(normal.scale(2 * normal.dot(r.direction)))), depth)));
+	}
+
+	private static Vector refraction(final Ray r, final int depth, final Sphere obj, final Vector intersectionPoint, final Vector normal, final Vector nl, final Vector f) {
+		final Ray reflRay = new Ray(intersectionPoint, r.direction.minus(normal.scale(2 * normal.dot(r.direction)))); // Ideal dielectric REFRACTION
+		final boolean into = normal.dot(nl) > 0; // Ray from outside going in?
 		final double nc = 1;
 		final double nt = 1.5;
 		final double nnt = into ? nc / nt : nt / nc;
@@ -119,17 +131,17 @@ class Smallpt {
 		if (cos2t < 0) {
 			return obj.emission.plus(f.multiply(radiance(reflRay, depth)));
 		}
-		final Vector tdir = (r.direction.scale(nnt).minus(n.scale(((into ? 1 : -1) * (ddn * nnt + Math.sqrt(cos2t)))))).norm();
+		final Vector tdir = (r.direction.scale(nnt).minus(normal.scale(((into ? 1 : -1) * (ddn * nnt + Math.sqrt(cos2t)))))).norm();
 		final double a = nt - nc;
 		final double b = nt + nc;
 		final double R0 = a * a / (b * b);
-		final double c = 1 - (into ? -ddn : tdir.dot(n));
+		final double c = 1 - (into ? -ddn : tdir.dot(normal));
 		final double Re = R0 + (1 - R0) * c * c * c * c * c;
 		final double Tr = 1 - Re;
 		final double P = .25 + .5 * Re;
 		final double RP = Re / P;
 		final double TP = Tr / (1 - P);
-		final Vector xx = getXX(depth, x, reflRay, tdir, Re, Tr, P, RP, TP);
+		final Vector xx = getXX(depth, intersectionPoint, reflRay, tdir, Re, Tr, P, RP, TP);
 		return obj.emission.plus(f.multiply(xx));
 	}
 
