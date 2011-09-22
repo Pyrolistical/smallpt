@@ -8,4 +8,8 @@ class IntersectionResult {
 		this.t = t;
 		this.id = id;
 	}
+
+	Vector getIntersectionPoint() {
+		return ray.getVector(t);
+	}
 }
