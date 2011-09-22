@@ -34,16 +34,17 @@ class Smallpt {
 		return (int) (clamp(x) * 255 + .5);
 	}
 
-	static void intersect(final Ray r, final Intersection intersection) {
-		final double inf = intersection.t = 1e20;
+	static IntersectionResult intersect(final Ray ray) {
+		double t = Double.POSITIVE_INFINITY;
+		int id = 0;
 		for (int i = spheres.length - 1; i >= 0; i--) {
-			final double d = spheres[i].intersect(r);
-			if (d > 0 && d < intersection.t) {
-				intersection.t = d;
-				intersection.id = i;
+			final double d = spheres[i].intersect(ray);
+			if (d > 0 && d < t) {
+				t = d;
+				id = i;
 			}
 		}
-		intersection.b = intersection.t < inf;
+		return new IntersectionResult(ray, t, id);
 	}
 
 	public static final Random random = new Random(1337);
@@ -53,9 +54,8 @@ class Smallpt {
 	}
 
 	static Vector radiance(final Ray r, int depth, final int E) {
-		final Intersection intersection = new Intersection();
-		intersect(r, intersection);
-		if (!intersection.b) {
+		final IntersectionResult intersection = intersect(r);
+		if (intersection.t > Double.POSITIVE_INFINITY) {
 			return new Vector(0, 0, 0);
 		} // if miss, return black
 		final Sphere obj = spheres[intersection.id]; // the hit object
@@ -79,7 +79,7 @@ class Smallpt {
 		return refraction(r, depth, obj, intersectionPoint, normal, nl, f);
 	}
 
-	private static Vector diffuse(final int depth, final int E, final Intersection intersection, final Sphere obj, final Vector intersectionPoint, final Vector nl, final Vector f) {
+	private static Vector diffuse(final int depth, final int E, final IntersectionResult intersection, final Sphere obj, final Vector intersectionPoint, final Vector nl, final Vector f) {
 		final double r1 = 2 * Math.PI * random.nextDouble();
 		final double r2 = random.nextDouble();
 		final double r2s = Math.sqrt(r2);
@@ -106,8 +106,8 @@ class Smallpt {
 			final double sin_a = Math.sqrt(1 - cos_a * cos_a);
 			final double phi = 2 * Math.PI * eps2;
 			final Vector l = su.scale(Math.cos(phi) * sin_a).plus(sv.scale(Math.sin(phi) * sin_a)).plus(sw.scale(cos_a)).norm();
-			intersect(new Ray(intersectionPoint, l), intersection);
-			if (intersection.b && intersection.id == i) { // shadow ray
+			final IntersectionResult shadowIntersection = intersect(new Ray(intersectionPoint, l));
+			if (shadowIntersection.t < Double.POSITIVE_INFINITY && shadowIntersection.id == i) { // shadow ray
 				final double omega = 2 * Math.PI * (1 - cos_a_max);
 				e = e.plus(f.multiply(s.emission.scale(l.dot(nl) * omega)).scale(1 / Math.PI));
 			}
