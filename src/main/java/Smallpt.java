@@ -86,7 +86,7 @@ class Smallpt {
 		final Vector w = nl;
 		final Vector u = ((Math.abs(w.x) > .1 ? new Vector(0, 1, 0) : new Vector(1, 0, 0)).cross(w)).norm();
 		final Vector v = w.cross(u);
-		final Vector d = (u.scale(Math.cos(r1) * r2s).plus(v.scale(Math.sin(r1) * r2s)).plus(w.scale(Math.sqrt(1 - r2)))).norm();
+		final Vector d = u.scale(Math.cos(r1) * r2s).plus(v.scale(Math.sin(r1) * r2s)).plus(w.scale(Math.sqrt(1 - r2))).norm();
 
 		// Loop over any lights
 		Vector e = new Vector(0, 0, 0);
@@ -97,9 +97,9 @@ class Smallpt {
 			} // skip non-lights
 
 			final Vector sw = s.center.minus(intersectionPoint);
-			final Vector su = ((Math.abs(sw.x) > .1 ? new Vector(0, 1, 0) : new Vector(1, 0, 0)).cross(sw)).norm();
+			final Vector su = (Math.abs(sw.x) > .1 ? new Vector(0, 1, 0) : new Vector(1, 0, 0)).cross(sw).norm();
 			final Vector sv = sw.cross(su);
-			final double cos_a_max = Math.sqrt(1 - s.radius * s.radius / (intersectionPoint.minus(s.center)).dot(intersectionPoint.minus(s.center)));
+			final double cos_a_max = Math.sqrt(1 - s.radius * s.radius / intersectionPoint.minus(s.center).dot(intersectionPoint.minus(s.center)));
 			final double eps1 = random.nextDouble();
 			final double eps2 = random.nextDouble();
 			final double cos_a = 1 - eps1 + eps1 * cos_a_max;
@@ -122,21 +122,21 @@ class Smallpt {
 
 	private static Vector refraction(final Ray r, final int depth, final Sphere obj, final Vector intersectionPoint, final Vector normal, final Vector nl, final Vector f) {
 		final Ray reflRay = new Ray(intersectionPoint, r.direction.minus(normal.scale(2 * normal.dot(r.direction)))); // Ideal dielectric REFRACTION
-		final boolean into = normal.dot(nl) > 0; // Ray from outside going in?
+		final double into = normal.dot(nl); // Ray from outside going in?
 		final double nc = 1;
 		final double nt = 1.5;
-		final double nnt = into ? nc / nt : nt / nc;
+		final double nnt = Math.pow(nc / nt, Math.signum(into));
 		final double ddn = r.direction.dot(nl);
 		final double cos2t = 1 - nnt * nnt * (1 - ddn * ddn);
 		if (cos2t < 0) {
 			return obj.emission.plus(f.multiply(radiance(reflRay, depth)));
 		}
-		final Vector tdir = (r.direction.scale(nnt).minus(normal.scale(((into ? 1 : -1) * (ddn * nnt + Math.sqrt(cos2t)))))).norm();
+		final Vector tdir = r.direction.scale(nnt).minus(normal.scale((Math.signum(into) * (ddn * nnt + Math.sqrt(cos2t))))).norm();
 		final double a = nt - nc;
 		final double b = nt + nc;
 		final double R0 = a * a / (b * b);
-		final double c = 1 - (into ? -ddn : tdir.dot(normal));
-		final double Re = R0 + (1 - R0) * c * c * c * c * c;
+		final double c = 1 - (into > 0 ? -ddn : tdir.dot(normal));
+		final double Re = R0 + (1 - R0) * Math.pow(c, 5);
 		final double Tr = 1 - Re;
 		final double P = .25 + .5 * Re;
 		final double RP = Re / P;
