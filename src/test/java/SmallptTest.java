@@ -13,7 +13,7 @@ import org.apache.commons.collections.Bag;
 import org.apache.commons.collections.bag.HashBag;
 import org.junit.Test;
 
-class SmallptTest {
+public class SmallptTest {
 
 	@Test
 	public void testOutputImage() throws IOException {

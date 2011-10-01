@@ -2,6 +2,8 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import javax.imageio.ImageIO;
@@ -160,7 +162,7 @@ class Smallpt {
 	public static void main(final String[] argv) throws IOException {
 		final int w = argv.length == 3 ? Integer.valueOf(argv[0]) : 256;
 		final int h = argv.length == 3 ? Integer.valueOf(argv[1]) : 256;
-		final int samples = argv.length == 3 ? Integer.valueOf(argv[2]) / 4 : 1;
+		final int samples = argv.length == 3 ? Integer.valueOf(argv[2]) / 4 : 8;
 		System.err.println(String.format("Options %dx%d with %d samples", w, h, samples));
 		final Camera camera = new Camera(new Vector(50, 52, 295.6), new Vector(0, -0.042612, -1).norm());
 		final Vector[][] image = renderImage(w, h, samples, camera);
@@ -176,15 +178,15 @@ class Smallpt {
 			System.err.println(String.format("\rRendering (%d spp) %5.2f%%", samples * 4, 100. * y / (h - 1)));
 			for (int x = 0; x < w; x++) {
 				for (int sy = 0; sy < 2; sy++) {
-					Vector r = new Vector(0, 0, 0);
-					for (int sx = 0; sx < 2; sx++, r = new Vector(0, 0, 0)) { // 2x2 subpixel cols
+					for (int sx = 0; sx < 2; sx++) { // 2x2 subpixel cols
+						final List<Vector> radiances = new ArrayList<Vector>();
 						for (int s = 0; s < samples; s++) {
 							final double r1 = 2 * random.nextDouble();
 							final double dx = r1 < 1 ? Math.sqrt(r1) - 1 : 1 - Math.sqrt(2 - r1);
 							final double r2 = 2 * random.nextDouble();
 							final double dy = r2 < 1 ? Math.sqrt(r2) - 1 : 1 - Math.sqrt(2 - r2);
 							final Vector d = cx.scale((((sx + .5 + dx) / 2 + x) / w - .5)).plus(cy.scale((((sy + .5 + dy) / 2 + y) / h - .5))).plus(camera.direction);
-							r = r.plus(radiance(new Ray(camera.position.plus(d.scale(140)), d.norm()), 0).scale((1. / samples)));
+							radiances.add(radiance(new Ray(camera.position.plus(d.scale(140)), d.norm()), 0));
 						} // Camera rays are pushed ^^^^^ forward to start in interior
 						if (image[y] == null) {
 							image[y] = new Vector[w];
@@ -192,12 +194,22 @@ class Smallpt {
 						if (image[y][x] == null) {
 							image[y][x] = new Vector(0, 0, 0);
 						}
-						image[y][x] = image[y][x].plus(new Vector(clamp(r.x), clamp(r.y), clamp(r.z)).scale(.25));
+						final Vector radiance = combineRadiance(radiances);
+						image[y][x] = image[y][x].plus(new Vector(clamp(radiance.x), clamp(radiance.y), clamp(radiance.z)).scale(.25));
 					}
 				}
 			}
 		}
 		return image;
+	}
+
+	private static Vector combineRadiance(final List<Vector> radiances) {
+		Vector combinedradiance = new Vector(0, 0, 0);
+		for (final Vector radiance : radiances) {
+			combinedradiance = combinedradiance.plus(radiance);
+		}
+		combinedradiance = combinedradiance.scale(1d / radiances.size());
+		return combinedradiance;
 	}
 
 	private static void writeImage(final int w, final int h, final Vector[][] c) throws IOException {
