@@ -175,8 +175,10 @@ class Smallpt {
 		final Vector cy = (cx.cross(camera.direction)).norm().scale(.5135);
 		final Vector[][] image = new Vector[h][];
 		for (int y = 0; y < h; y++) { // Loop over image rows
+			image[y] = new Vector[w];
 			System.err.println(String.format("\rRendering (%d spp) %5.2f%%", samples * 4, 100. * y / (h - 1)));
 			for (int x = 0; x < w; x++) {
+				final List<Vector> subpixels = new ArrayList<Vector>();
 				for (int sy = 0; sy < 2; sy++) {
 					for (int sx = 0; sx < 2; sx++) { // 2x2 subpixel cols
 						final List<Vector> radiances = new ArrayList<Vector>();
@@ -188,22 +190,27 @@ class Smallpt {
 							final Vector d = cx.scale((((sx + .5 + dx) / 2 + x) / w - .5)).plus(cy.scale((((sy + .5 + dy) / 2 + y) / h - .5))).plus(camera.direction);
 							radiances.add(radiance(new Ray(camera.position.plus(d.scale(140)), d.norm()), 0));
 						} // Camera rays are pushed ^^^^^ forward to start in interior
-						if (image[y] == null) {
-							image[y] = new Vector[w];
-						}
-						if (image[y][x] == null) {
-							image[y][x] = new Vector(0, 0, 0);
-						}
-						final Vector radiance = combineRadiance(radiances);
-						image[y][x] = image[y][x].plus(new Vector(clamp(radiance.x), clamp(radiance.y), clamp(radiance.z)).scale(.25));
+						final Vector radiance = combineRadiances(radiances);
+						subpixels.add(new Vector(clamp(radiance.x), clamp(radiance.y), clamp(radiance.z)));
 					}
 				}
+				final Vector pixel = combineSubpixels(subpixels);
+				image[y][x] = pixel;
 			}
 		}
 		return image;
 	}
 
-	private static Vector combineRadiance(final List<Vector> radiances) {
+	private static Vector combineSubpixels(final List<Vector> subpixels) {
+		Vector pixel = new Vector(0, 0, 0);
+		for (final Vector subpixel : subpixels) {
+			pixel = pixel.plus(subpixel);
+		}
+		pixel = pixel.scale(1d / subpixels.size());
+		return pixel;
+	}
+
+	private static Vector combineRadiances(final List<Vector> radiances) {
 		Vector combinedradiance = new Vector(0, 0, 0);
 		for (final Vector radiance : radiances) {
 			combinedradiance = combinedradiance.plus(radiance);
