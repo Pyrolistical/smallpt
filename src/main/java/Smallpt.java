@@ -158,19 +158,19 @@ class Smallpt {
 	}
 
 	public static void main(final String[] argv) throws IOException {
-		final int w = argv.length == 3 ? Integer.valueOf(argv[0]) : 256; // # samples
-		final int h = argv.length == 3 ? Integer.valueOf(argv[1]) : 256; // # samples
-		final int samples = argv.length == 3 ? Integer.valueOf(argv[2]) / 4 : 1; // # samples
+		final int w = argv.length == 3 ? Integer.valueOf(argv[0]) : 256;
+		final int h = argv.length == 3 ? Integer.valueOf(argv[1]) : 256;
+		final int samples = argv.length == 3 ? Integer.valueOf(argv[2]) / 4 : 1;
 		System.err.println(String.format("Options %dx%d with %d samples", w, h, samples));
-		final Ray camera = new Ray(new Vector(50, 52, 295.6), new Vector(0, -0.042612, -1).norm()); // cam pos, dir
-		final Vector cx = new Vector(w * .5135 / h, 0, 0);
-		final Vector cy = (cx.cross(camera.direction)).norm().scale(.5135);
-		final Vector[][] image = renderImage(w, h, samples, camera, cx, cy);
+		final Camera camera = new Camera(new Vector(50, 52, 295.6), new Vector(0, -0.042612, -1).norm());
+		final Vector[][] image = renderImage(w, h, samples, camera);
 		writeImage(w, h, image);
 
 	}
 
-	private static Vector[][] renderImage(final int w, final int h, final int samples, final Ray camera, final Vector cx, final Vector cy) {
+	private static Vector[][] renderImage(final int w, final int h, final int samples, final Camera camera) {
+		final Vector cx = new Vector(w * .5135 / h, 0, 0);
+		final Vector cy = (cx.cross(camera.direction)).norm().scale(.5135);
 		final Vector[][] image = new Vector[h][];
 		for (int y = 0; y < h; y++) { // Loop over image rows
 			System.err.println(String.format("\rRendering (%d spp) %5.2f%%", samples * 4, 100. * y / (h - 1)));
@@ -184,7 +184,7 @@ class Smallpt {
 							final double r2 = 2 * random.nextDouble();
 							final double dy = r2 < 1 ? Math.sqrt(r2) - 1 : 1 - Math.sqrt(2 - r2);
 							final Vector d = cx.scale((((sx + .5 + dx) / 2 + x) / w - .5)).plus(cy.scale((((sy + .5 + dy) / 2 + y) / h - .5))).plus(camera.direction);
-							r = r.plus(radiance(new Ray(camera.origin.plus(d.scale(140)), d.norm()), 0).scale((1. / samples)));
+							r = r.plus(radiance(new Ray(camera.position.plus(d.scale(140)), d.norm()), 0).scale((1. / samples)));
 						} // Camera rays are pushed ^^^^^ forward to start in interior
 						if (image[y] == null) {
 							image[y] = new Vector[w];
