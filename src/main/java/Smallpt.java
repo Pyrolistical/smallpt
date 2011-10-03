@@ -212,11 +212,11 @@ class Smallpt {
 
 		for (int y = 0; y < c.length; y++) {
 			for (int x = 0; x < c[0].length; x++) {
-				final int a[] = new int[3];
-				a[0] = toInt(increaseBrightness(c[y][x].x));
-				a[1] = toInt(increaseBrightness(c[y][x].y));
-				a[2] = toInt(increaseBrightness(c[y][x].z));
-				image.setRGB(x, c.length - y - 1, new Color(a[0], a[1], a[2]).getRGB());
+				final int red = toInt(increaseBrightness(c[y][x].x));
+				final int green = toInt(increaseBrightness(c[y][x].y));
+				final int blue = toInt(increaseBrightness(c[y][x].z));
+				final int rgb = new Color(red, green, blue).getRGB();
+				image.setRGB(x, c.length - y - 1, rgb);
 			}
 		}
 
