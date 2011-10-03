@@ -32,4 +32,8 @@ class Sphere {
 		}
 		return new IntersectionResult(ray, tnear, this);
 	}
+
+	Vector getNormal(final Vector intersectionPoint) {
+		return intersectionPoint.minus(center).norm();
+	}
 };

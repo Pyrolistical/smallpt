@@ -12,4 +12,8 @@ class IntersectionResult {
 	Vector getIntersectionPoint() {
 		return ray.getVector(t);
 	}
+
+	Vector getNormal() {
+		return object.getNormal(getIntersectionPoint());
+	}
 }

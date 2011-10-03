@@ -60,7 +60,7 @@ class Smallpt {
 		} // if miss, return black
 		final Sphere obj = intersection.object; // the hit object
 		final Vector intersectionPoint = intersection.getIntersectionPoint();
-		final Vector normal = intersectionPoint.minus(obj.center).norm();
+		final Vector normal = intersection.getNormal();
 		final Vector nl = normal.dot(r.direction) < 0 ? normal : normal.scale(-1);
 		Vector f = obj.color;
 		final double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
