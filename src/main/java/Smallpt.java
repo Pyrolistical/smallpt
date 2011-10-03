@@ -37,16 +37,14 @@ class Smallpt {
 	}
 
 	static IntersectionResult intersect(final Ray ray) {
-		double t = Double.POSITIVE_INFINITY;
-		int id = 0;
+		IntersectionResult t = new IntersectionResult(ray, Double.POSITIVE_INFINITY, null);
 		for (int i = spheres.length - 1; i >= 0; i--) {
-			final double d = spheres[i].intersect(ray);
-			if (d > 0 && d < t) {
+			final IntersectionResult d = spheres[i].intersect(ray);
+			if (d.t > 0 && d.t < t.t) {
 				t = d;
-				id = i;
 			}
 		}
-		return new IntersectionResult(ray, t, id);
+		return t;
 	}
 
 	public static final Random random = new Random(1337);
@@ -60,7 +58,7 @@ class Smallpt {
 		if (intersection.t > Double.POSITIVE_INFINITY) {
 			return new Vector(0, 0, 0);
 		} // if miss, return black
-		final Sphere obj = spheres[intersection.id]; // the hit object
+		final Sphere obj = intersection.object; // the hit object
 		final Vector intersectionPoint = intersection.getIntersectionPoint();
 		final Vector normal = intersectionPoint.minus(obj.center).norm();
 		final Vector nl = normal.dot(r.direction) < 0 ? normal : normal.scale(-1);
@@ -92,8 +90,7 @@ class Smallpt {
 
 		// Loop over any lights
 		Vector e = new Vector(0, 0, 0);
-		for (int i = 0; i < spheres.length; i++) {
-			final Sphere s = spheres[i];
+		for (final Sphere s : spheres) {
 			if (s.emission.x <= 0 && s.emission.y <= 0 && s.emission.z <= 0) {
 				continue;
 			} // skip non-lights
@@ -109,7 +106,7 @@ class Smallpt {
 			final double phi = 2 * Math.PI * eps2;
 			final Vector l = su.scale(Math.cos(phi) * sin_a).plus(sv.scale(Math.sin(phi) * sin_a)).plus(sw.scale(cos_a)).norm();
 			final IntersectionResult shadowIntersection = intersect(new Ray(intersectionPoint, l));
-			if (shadowIntersection.t < Double.POSITIVE_INFINITY && shadowIntersection.id == i) { // shadow ray
+			if (shadowIntersection.t < Double.POSITIVE_INFINITY && shadowIntersection.object == s) { // shadow ray
 				final double omega = 2 * Math.PI * (1 - cos_a_max);
 				e = e.plus(f.multiply(s.emission.scale(l.dot(nl) * omega)).scale(1 / Math.PI));
 			}

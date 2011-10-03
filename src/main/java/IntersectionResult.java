@@ -1,12 +1,12 @@
 class IntersectionResult {
 	final Ray ray;
 	final double t;
-	final int id;
+	final Sphere object;
 
-	IntersectionResult(final Ray ray, final double t, final int id) {
+	IntersectionResult(final Ray ray, final double t, final Sphere object) {
 		this.ray = ray;
 		this.t = t;
-		this.id = id;
+		this.object = object;
 	}
 
 	Vector getIntersectionPoint() {

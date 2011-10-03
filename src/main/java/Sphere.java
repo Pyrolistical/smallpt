@@ -13,23 +13,23 @@ class Sphere {
 		material = refl_;
 	}
 
-	double intersect(final Ray ray) {
+	IntersectionResult intersect(final Ray ray) {
 		final Vector v = center.minus(ray.origin);
 		final double b = v.dot(ray.direction);
 		final double discriminant = b * b - v.dot(v) + radius * radius;
 		if (discriminant < 0) {
-			return 0;
+			return new IntersectionResult(ray, 0, this);
 		}
 		final double d = Math.sqrt(discriminant);
 		final double tfar = b + d;
 		final double eps = 1e-4;
 		if (tfar <= eps) {
-			return 0;
+			return new IntersectionResult(ray, 0, this);
 		}
 		final double tnear = b - d;
 		if (tnear <= eps) {
-			return tfar;
+			return new IntersectionResult(ray, tfar, this);
 		}
-		return tnear;
+		return new IntersectionResult(ray, tnear, this);
 	}
 };
