@@ -175,25 +175,36 @@ class Smallpt {
 			image[y] = new Vector[w];
 			System.err.println(String.format("\rRendering (%d spp) %5.2f%%", samples * 4, 100. * y / (h - 1)));
 			for (int x = 0; x < w; x++) {
-				final List<Vector> radiances = new ArrayList<Vector>();
-				for (int sy = 0; sy < 2; sy++) {
-					for (int sx = 0; sx < 2; sx++) { // 2x2 subpixel cols
-						for (int s = 0; s < samples; s++) {
-							final double r1 = 2 * random.nextDouble();
-							final double dx = r1 < 1 ? Math.sqrt(r1) - 1 : 1 - Math.sqrt(2 - r1);
-							final double r2 = 2 * random.nextDouble();
-							final double dy = r2 < 1 ? Math.sqrt(r2) - 1 : 1 - Math.sqrt(2 - r2);
-							final Vector d = cx.scale((((sx + .5 + dx) / 2 + x) / w - .5)).plus(cy.scale((((sy + .5 + dy) / 2 + y) / h - .5))).plus(camera.direction);
-							final Vector radiance = radiance(new Ray(camera.position.plus(d.scale(140)), d.norm()), 0);
-							radiances.add(new Vector(clamp(radiance.x), clamp(radiance.y), clamp(radiance.z)));
-						} // Camera rays are pushed ^^^^^ forward to start in interior
-					}
-				}
+				final List<Vector> radiances = samplePixel(w, h, samples, camera, cx, cy, y, x);
 				final Vector radiance = combineRadiances(radiances);
 				image[y][x] = radiance;
 			}
 		}
 		return image;
+	}
+
+	private static List<Vector> samplePixel(final int w, final int h, final int samples, final Camera camera, final Vector cx, final Vector cy, final int y, final int x) {
+		final List<Vector> radiances = new ArrayList<Vector>();
+		for (int sy = 0; sy < 2; sy++) {
+			for (int sx = 0; sx < 2; sx++) { // 2x2 subpixel cols
+				radiances.addAll(sampleSubPixel(w, h, samples, camera, cx, cy, y, x, sy, sx));
+			}
+		}
+		return radiances;
+	}
+
+	private static List<Vector> sampleSubPixel(final int w, final int h, final int samples, final Camera camera, final Vector cx, final Vector cy, final int y, final int x, final int sy, final int sx) {
+		final List<Vector> radiances = new ArrayList<Vector>();
+		for (int s = 0; s < samples; s++) {
+			final double r1 = 2 * random.nextDouble();
+			final double dx = r1 < 1 ? Math.sqrt(r1) - 1 : 1 - Math.sqrt(2 - r1);
+			final double r2 = 2 * random.nextDouble();
+			final double dy = r2 < 1 ? Math.sqrt(r2) - 1 : 1 - Math.sqrt(2 - r2);
+			final Vector d = cx.scale((((sx + .5 + dx) / 2 + x) / w - .5)).plus(cy.scale((((sy + .5 + dy) / 2 + y) / h - .5))).plus(camera.direction);
+			final Vector radiance = radiance(new Ray(camera.position.plus(d.scale(140)), d.norm()), 0);
+			radiances.add(new Vector(clamp(radiance.x), clamp(radiance.y), clamp(radiance.z)));
+		} // Camera rays are pushed ^^^^^ forward to start in interior
+		return radiances;
 	}
 
 	private static Vector combineRadiances(final List<Vector> radiances) {
