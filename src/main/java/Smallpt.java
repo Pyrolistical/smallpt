@@ -38,8 +38,8 @@ class Smallpt {
 
 	static IntersectionResult intersect(final Ray ray) {
 		IntersectionResult t = new IntersectionResult(ray, Double.POSITIVE_INFINITY, null);
-		for (int i = spheres.length - 1; i >= 0; i--) {
-			final IntersectionResult d = spheres[i].intersect(ray);
+		for (final Sphere s : spheres) {
+			final IntersectionResult d = s.intersect(ray);
 			if (d.t > 0 && d.t < t.t) {
 				t = d;
 			}
