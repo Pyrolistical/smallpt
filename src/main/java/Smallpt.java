@@ -80,13 +80,7 @@ class Smallpt {
 	}
 
 	private static Vector diffuse(final int depth, final int E, final IntersectionResult intersection, final Sphere obj, final Vector intersectionPoint, final Vector nl, final Vector f) {
-		final double r1 = 2 * Math.PI * random.nextDouble();
-		final double r2 = random.nextDouble();
-		final double r2s = Math.sqrt(r2);
-		final Vector w = nl;
-		final Vector u = ((Math.abs(w.x) > .1 ? new Vector(0, 1, 0) : new Vector(1, 0, 0)).cross(w)).norm();
-		final Vector v = w.cross(u);
-		final Vector d = u.scale(Math.cos(r1) * r2s).plus(v.scale(Math.sin(r1) * r2s)).plus(w.scale(Math.sqrt(1 - r2))).norm();
+		final Vector d = randomSampleDirection(nl);
 
 		// Loop over any lights
 		Vector e = new Vector(0, 0, 0);
@@ -113,6 +107,17 @@ class Smallpt {
 		}
 
 		return obj.emission.scale(E).plus(e).plus(f.multiply(radiance(new Ray(intersectionPoint, d), depth, 0)));
+	}
+
+	private static Vector randomSampleDirection(final Vector nl) {
+		final double r1 = 2 * Math.PI * random.nextDouble();
+		final double r2 = random.nextDouble();
+		final double r2s = Math.sqrt(r2);
+		final Vector w = nl;
+		final Vector u = ((Math.abs(w.x) > .1 ? new Vector(0, 1, 0) : new Vector(1, 0, 0)).cross(w)).norm();
+		final Vector v = w.cross(u);
+		final Vector d = u.scale(Math.cos(r1) * r2s).plus(v.scale(Math.sin(r1) * r2s)).plus(w.scale(Math.sqrt(1 - r2))).norm();
+		return d;
 	}
 
 	private static Vector specular(final Ray r, final int depth, final Sphere obj, final Vector intersectionPoint, final Vector normal, final Vector f) {
