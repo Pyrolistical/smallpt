@@ -63,7 +63,7 @@ class Smallpt {
 		final Vector normal = intersection.getNormal();
 		final Vector nl = normal.dot(r.direction) < 0 ? normal : normal.scale(-1);
 		Vector f = obj.color;
-		final double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
+		final double p = Math.max(f.x, Math.max(f.y, f.z));
 		if (++depth > 5 || p == 0) {
 			if (random.nextDouble() < p) {
 				f = f.scale(1 / p);
