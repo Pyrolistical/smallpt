@@ -1,6 +1,6 @@
 class IntersectionResult {
-	final Ray ray;
-	final double t;
+	private final Ray ray;
+	private final double t;
 	final Sphere object;
 
 	IntersectionResult(final Ray ray, final double t, final Sphere object) {
@@ -15,5 +15,17 @@ class IntersectionResult {
 
 	Vector getNormal() {
 		return object.getNormal(getIntersectionPoint());
+	}
+
+	public boolean isHit() {
+		return t > 0;
+	}
+
+	public boolean closerThan(final IntersectionResult other) {
+		return t < other.t;
+	}
+
+	public boolean isMiss() {
+		return t == 0;
 	}
 }

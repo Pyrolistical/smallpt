@@ -40,7 +40,7 @@ class Smallpt {
 		IntersectionResult t = new IntersectionResult(ray, Double.POSITIVE_INFINITY, null);
 		for (final Sphere s : spheres) {
 			final IntersectionResult d = s.intersect(ray);
-			if (d.t > 0 && d.t < t.t) {
+			if (d.isHit() && d.closerThan(t)) {
 				t = d;
 			}
 		}
@@ -55,7 +55,7 @@ class Smallpt {
 
 	static Vector radiance(final Ray r, int depth, final int E) {
 		final IntersectionResult intersection = intersect(r);
-		if (intersection.t > Double.POSITIVE_INFINITY) {
+		if (intersection.isMiss()) {
 			return new Vector(0, 0, 0);
 		} // if miss, return black
 		final Sphere obj = intersection.object; // the hit object
@@ -100,7 +100,7 @@ class Smallpt {
 			final double phi = 2 * Math.PI * eps2;
 			final Vector l = su.scale(Math.cos(phi) * sin_a).plus(sv.scale(Math.sin(phi) * sin_a)).plus(sw.scale(cos_a)).norm();
 			final IntersectionResult shadowIntersection = intersect(new Ray(intersectionPoint, l));
-			if (shadowIntersection.t < Double.POSITIVE_INFINITY && shadowIntersection.object == s) { // shadow ray
+			if (shadowIntersection.isHit() && shadowIntersection.object == s) { // shadow ray
 				final double omega = 2 * Math.PI * (1 - cos_a_max);
 				e = e.plus(f.multiply(s.emission.scale(l.dot(nl) * omega)).scale(1 / Math.PI));
 			}
