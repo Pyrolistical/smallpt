@@ -18,7 +18,7 @@ public class SmallptTest {
 	@Test
 	public void testOutputImage() throws IOException {
 		Smallpt.main(new String[] {
-				"32", "32", "48"
+				"32", "32", "15"
 		});
 		final BufferedImage expected = readResource("expected.png");
 		final BufferedImage actual = ImageIO.read(new File("target/image.png"));
