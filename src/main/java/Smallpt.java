@@ -175,9 +175,8 @@ class Smallpt {
 	}
 
 	private static Vector[][] renderImage(final int w, final int h, final int samples, final Camera camera) {
-		final double ratio = .5135;
-		final Vector cx = new Vector(w / h, 0, 0).scale(ratio);
-		final Vector cy = cx.cross(camera.direction).norm().scale(ratio);
+		final Vector cx = new Vector(w / h, 0, 0);
+		final Vector cy = new Vector(0, 1, 0);
 		final Vector[][] image = new Vector[h][];
 		for (int y = 0; y < h; y++) { // Loop over image rows
 			image[y] = new Vector[w];
@@ -197,7 +196,7 @@ class Smallpt {
 			final double dy = (double) sy / samples;
 			for (int sx = 0; sx < samples; sx++) {
 				final double dx = (double) sx / samples;
-				final Vector d = cx.scale((dx + x) / w - .5).plus(cy.scale((dy + y) / h - .5)).plus(camera.direction);
+				final Vector d = cx.scale((dx + x) / w - .5).plus(cy.scale((dy + y) / h - .5)).scale(.5135).plus(camera.direction);
 				final Vector radiance = radiance(new Ray(camera.position.plus(d.scale(140)), d.norm()), 0);
 				radiances.add(new Vector(clamp(radiance.x), clamp(radiance.y), clamp(radiance.z)));
 			}
