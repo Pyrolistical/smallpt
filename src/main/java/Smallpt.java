@@ -12,15 +12,15 @@ import javax.imageio.ImageIO;
 class Smallpt {
 
 	static Sphere spheres[] = {// Scene: radius, position, emission, color, material
-			new Sphere(1e5, new Vector(1e5 + 1, 40.8, 81.6), new Vector(0, 0, 0), new Vector(.75, .25, .25), Material.DIFFUSE),// Left
-			new Sphere(1e5, new Vector(-1e5 + 99, 40.8, 81.6), new Vector(0, 0, 0), new Vector(.25, .25, .75), Material.DIFFUSE),// Rght
-			new Sphere(1e5, new Vector(50, 40.8, 1e5), new Vector(0, 0, 0), new Vector(.75, .75, .75), Material.DIFFUSE),// Back
-			new Sphere(1e5, new Vector(50, 40.8, -1e5 + 170), new Vector(0, 0, 0), new Vector(0, 0, 0), Material.DIFFUSE),// Frnt
-			new Sphere(1e5, new Vector(50, 1e5, 81.6), new Vector(0, 0, 0), new Vector(.75, .75, .75), Material.DIFFUSE),// Botm
-			new Sphere(1e5, new Vector(50, -1e5 + 81.6, 81.6), new Vector(0, 0, 0), new Vector(.75, .75, .75), Material.DIFFUSE),// Top
-			new Sphere(16.5, new Vector(27, 16.5, 47), new Vector(0, 0, 0), new Vector(.999, .999, .999), Material.SPECULAR),// Mirr
-			new Sphere(16.5, new Vector(73, 16.5, 78), new Vector(0, 0, 0), new Vector(.999, .999, .999), Material.REFRACTIVE),// Glas
-			new Sphere(1.5, new Vector(50, 81.6 - 16.5, 81.6), new Vector(400, 400, 400), new Vector(0, 0, 0), Material.DIFFUSE)
+			new Sphere(1e5, new Vector(1e5 - 49, 40.8, 81.6), new Vector(0, 0, 0), new Vector(.75, .25, .25), Material.DIFFUSE),// Left
+			new Sphere(1e5, new Vector(-1e5 + 49, 40.8, 81.6), new Vector(0, 0, 0), new Vector(.25, .25, .75), Material.DIFFUSE),// Rght
+			new Sphere(1e5, new Vector(0, 40.8, 1e5), new Vector(0, 0, 0), new Vector(.75, .75, .75), Material.DIFFUSE),// Back
+			new Sphere(1e5, new Vector(0, 40.8, -1e5 + 170), new Vector(0, 0, 0), new Vector(0, 0, 0), Material.DIFFUSE),// Frnt
+			new Sphere(1e5, new Vector(0, 1e5, 81.6), new Vector(0, 0, 0), new Vector(.75, .75, .75), Material.DIFFUSE),// Botm
+			new Sphere(1e5, new Vector(0, -1e5 + 81.6, 81.6), new Vector(0, 0, 0), new Vector(.75, .75, .75), Material.DIFFUSE),// Top
+			new Sphere(16.5, new Vector(-23, 16.5, 47), new Vector(0, 0, 0), new Vector(.999, .999, .999), Material.SPECULAR),// Mirr
+			new Sphere(16.5, new Vector(23, 16.5, 78), new Vector(0, 0, 0), new Vector(.999, .999, .999), Material.REFRACTIVE),// Glas
+			new Sphere(1.5, new Vector(0, 81.6 - 16.5, 81.6), new Vector(400, 400, 400), new Vector(0, 0, 0), Material.DIFFUSE)
 	// Lite
 	};
 
@@ -166,7 +166,7 @@ class Smallpt {
 		final int h = argv.length == 3 ? Integer.valueOf(argv[1]) : 256;
 		final int samples = argv.length == 3 ? Integer.valueOf(argv[2]) / 4 : 8;
 		System.err.println(String.format("Options %dx%d with %d samples", w, h, samples));
-		final Camera camera = new Camera(new Vector(50, 52, 295.6), new Vector(0, -0.042612, -1).norm());
+		final Camera camera = new Camera(new Vector(0, 52, 295.6), new Vector(0, -0.042612, -1).norm());
 		final Vector[][] image = renderImage(w, h, samples, camera);
 		writeImage(w, h, image);
 
