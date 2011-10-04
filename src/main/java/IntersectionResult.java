@@ -1,4 +1,6 @@
 class IntersectionResult {
+	public static final IntersectionResult MISS = new IntersectionResult(null, Double.POSITIVE_INFINITY, null);
+
 	private final Ray ray;
 	private final double t;
 	final Sphere object;
@@ -18,7 +20,7 @@ class IntersectionResult {
 	}
 
 	public boolean isHit() {
-		return t > 0;
+		return this != MISS;
 	}
 
 	public boolean closerThan(final IntersectionResult other) {
@@ -26,6 +28,6 @@ class IntersectionResult {
 	}
 
 	public boolean isMiss() {
-		return t == 0;
+		return this == MISS;
 	}
 }

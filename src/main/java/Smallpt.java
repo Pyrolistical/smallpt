@@ -37,7 +37,7 @@ class Smallpt {
 	}
 
 	static IntersectionResult intersect(final Ray ray) {
-		IntersectionResult t = new IntersectionResult(ray, Double.POSITIVE_INFINITY, null);
+		IntersectionResult t = IntersectionResult.MISS;
 		for (final Sphere s : spheres) {
 			final IntersectionResult d = s.intersect(ray);
 			if (d.isHit() && d.closerThan(t)) {

@@ -18,13 +18,13 @@ class Sphere {
 		final double b = v.dot(ray.direction);
 		final double discriminant = b * b - v.dot(v) + radius * radius;
 		if (discriminant < 0) {
-			return new IntersectionResult(ray, 0, this);
+			return IntersectionResult.MISS;
 		}
 		final double d = Math.sqrt(discriminant);
 		final double tfar = b + d;
 		final double eps = 1e-4;
 		if (tfar <= eps) {
-			return new IntersectionResult(ray, 0, this);
+			return IntersectionResult.MISS;
 		}
 		final double tnear = b - d;
 		if (tnear <= eps) {
