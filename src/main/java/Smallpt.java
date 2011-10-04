@@ -167,7 +167,7 @@ class Smallpt {
 		final int h = argv.length == 3 ? Integer.valueOf(argv[1]) : 256;
 		final int samples = argv.length == 3 ? Integer.valueOf(argv[2]) : 6;
 		System.err.println(String.format("Options %dx%d with %d samples", w, h, samples * samples));
-		final Camera camera = new Camera(new Vector(0, 11.2, 214), new Vector(0, -0.042612, -1).norm(), (double) w / h);
+		final Camera camera = new Camera(new Vector(0, 11.2, 214), new Vector(0, -0.042612, -1), (double) w / h, 4 * Math.PI / 25); // 28.8 degrees
 		final Vector[][] image = renderImage(w, h, samples, camera);
 		writeImage(w, h, image);
 		final long end = System.currentTimeMillis();
@@ -194,8 +194,8 @@ class Smallpt {
 			final double dy = (double) sy / samples;
 			for (int sx = 0; sx < samples; sx++) {
 				final double dx = (double) sx / samples;
-				final Vector d = camera.right.scale((dx + x) / w - .5).plus(camera.up.scale((dy + y) / h - .5)).scale(.5135).plus(camera.direction);
-				final Vector radiance = radiance(new Ray(camera.position.plus(d.scale(140)), d.norm()), 0);
+				final Vector sampleDirection = camera.getSampleDirection((dx + x) / w, (dy + y) / h);
+				final Vector radiance = radiance(new Ray(camera.position.plus(sampleDirection.scale(140)), sampleDirection.norm()), 0);
 				radiances.add(new Vector(clamp(radiance.x), clamp(radiance.y), clamp(radiance.z)));
 			}
 		} // Camera rays are pushed ^^^^^ forward to start in interior
