@@ -12,12 +12,12 @@ import javax.imageio.ImageIO;
 class Smallpt {
 
 	static Sphere spheres[] = {// Scene: radius, position, emission, color, material
-			new Sphere(1e5, new Vector(1e5 - 49, 0, 0), new Vector(0, 0, 0), new Vector(.75, .25, .25), Material.DIFFUSE),// Left
-			new Sphere(1e5, new Vector(-1e5 + 49, 0, 0), new Vector(0, 0, 0), new Vector(.25, .25, .75), Material.DIFFUSE),// Rght
-			new Sphere(1e5, new Vector(0, 0, 1e5 - 81.6), new Vector(0, 0, 0), new Vector(.75, .75, .75), Material.DIFFUSE),// Back
-			new Sphere(1e5, new Vector(0, 0, -1e5 + 88.4), new Vector(0, 0, 0), new Vector(0, 0, 0), Material.DIFFUSE),// Frnt
-			new Sphere(1e5, new Vector(0, 1e5 - 40.8, 0), new Vector(0, 0, 0), new Vector(.75, .75, .75), Material.DIFFUSE),// Botm
-			new Sphere(1e5, new Vector(0, -1e5 + 40.8, 0), new Vector(0, 0, 0), new Vector(.75, .75, .75), Material.DIFFUSE),// Top
+			new Sphere(1e5, new Vector(-1e5 - 49, 0, 0), new Vector(0, 0, 0), new Vector(.75, .25, .25), Material.DIFFUSE),// Left
+			new Sphere(1e5, new Vector(1e5 + 49, 0, 0), new Vector(0, 0, 0), new Vector(.25, .25, .75), Material.DIFFUSE),// Rght
+			new Sphere(1e5, new Vector(0, 0, -1e5 - 81.6), new Vector(0, 0, 0), new Vector(.75, .75, .75), Material.DIFFUSE),// Back
+			new Sphere(1e5, new Vector(0, 0, 1e5 + 88.4), new Vector(0, 0, 0), new Vector(0, 0, 0), Material.DIFFUSE),// Frnt
+			new Sphere(1e5, new Vector(0, -1e5 - 40.8, 0), new Vector(0, 0, 0), new Vector(.75, .75, .75), Material.DIFFUSE),// Botm
+			new Sphere(1e5, new Vector(0, 1e5 + 40.8, 0), new Vector(0, 0, 0), new Vector(.75, .75, .75), Material.DIFFUSE),// Top
 			new Sphere(16.5, new Vector(-23, -24.3, -34.6), new Vector(0, 0, 0), new Vector(.999, .999, .999), Material.SPECULAR),// Mirr
 			new Sphere(16.5, new Vector(23, -24.3, -3.6), new Vector(0, 0, 0), new Vector(.999, .999, .999), Material.REFRACTIVE),// Glas
 			new Sphere(1.5, new Vector(0, 24.3, 0), new Vector(400, 400, 400), new Vector(0, 0, 0), Material.DIFFUSE)
@@ -162,6 +162,7 @@ class Smallpt {
 	}
 
 	public static void main(final String[] argv) throws IOException {
+		final long start = System.currentTimeMillis();
 		final int w = argv.length == 3 ? Integer.valueOf(argv[0]) : 256;
 		final int h = argv.length == 3 ? Integer.valueOf(argv[1]) : 256;
 		final int samples = argv.length == 3 ? Integer.valueOf(argv[2]) : 6;
@@ -169,12 +170,14 @@ class Smallpt {
 		final Camera camera = new Camera(new Vector(0, 11.2, 214), new Vector(0, -0.042612, -1).norm());
 		final Vector[][] image = renderImage(w, h, samples, camera);
 		writeImage(w, h, image);
-
+		final long end = System.currentTimeMillis();
+		System.out.println(String.format("Finished in %dms", end - start));
 	}
 
 	private static Vector[][] renderImage(final int w, final int h, final int samples, final Camera camera) {
-		final Vector cx = new Vector(w * .5135 / h, 0, 0);
-		final Vector cy = (cx.cross(camera.direction)).norm().scale(.5135);
+		final double ratio = .5135;
+		final Vector cx = new Vector(w / h, 0, 0).scale(ratio);
+		final Vector cy = cx.cross(camera.direction).norm().scale(ratio);
 		final Vector[][] image = new Vector[h][];
 		for (int y = 0; y < h; y++) { // Loop over image rows
 			image[y] = new Vector[w];

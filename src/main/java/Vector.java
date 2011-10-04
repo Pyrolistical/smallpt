@@ -44,4 +44,9 @@ class Vector {
 	Vector cross(final Vector b) {
 		return new Vector(y * b.z - z * b.y, z * b.x - x * b.z, x * b.y - y * b.x);
 	}
+
+	@Override
+	public String toString() {
+		return String.format("Vector[%f, %f, %f]", x, y, z);
+	}
 }

@@ -15,6 +15,9 @@ class Sphere {
 
 	IntersectionResult intersect(final Ray ray) {
 		final Vector v = center.minus(ray.origin);
+		if (v.squaredLength() < radius * radius) {
+			return IntersectionResult.MISS;
+		}
 		final double b = v.dot(ray.direction);
 		final double discriminant = b * b - v.dot(v) + radius * radius;
 		if (discriminant < 0) {
