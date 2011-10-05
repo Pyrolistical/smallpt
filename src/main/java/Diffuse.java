@@ -9,7 +9,10 @@ class Diffuse implements Material {
 	}
 
 	@Override
-	public Vector getBSDF(final Sampler sampler, final Scene scene, final Ray ray, final int depth, final int E, final IntersectionResult intersection, final Sphere obj, final Vector intersectionPoint, final Vector normal, final Vector f) {
+	public Vector getBSDF(final Sampler sampler, final Scene scene, final Ray ray, final int depth, final int E, final IntersectionResult intersection, final Vector f) {
+		final Sphere obj = intersection.object; // the hit object
+		final Vector intersectionPoint = intersection.getIntersectionPoint();
+		final Vector normal = intersection.getNormal();
 		final Vector d = sampleAroundNormal(normal);
 
 		// Loop over any lights

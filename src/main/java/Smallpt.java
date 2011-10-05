@@ -37,8 +37,6 @@ class Smallpt implements Sampler {
 			return new Vector(0, 0, 0);
 		} // if miss, return black
 		final Sphere obj = intersection.object; // the hit object
-		final Vector intersectionPoint = intersection.getIntersectionPoint();
-		final Vector normal = intersection.getNormal();
 		Vector f = obj.color;
 		final double p = Math.max(f.x, Math.max(f.y, f.z));
 		if (++depth > 5 || p == 0) {
@@ -48,7 +46,7 @@ class Smallpt implements Sampler {
 				return obj.emission.scale(E);
 			}
 		} // R.R.
-		return obj.material.getBSDF(this, scene, r, depth, E, intersection, obj, intersectionPoint, normal, f);
+		return obj.material.getBSDF(this, scene, r, depth, E, intersection, f);
 	}
 
 	public static void main(final String[] argv) throws IOException {

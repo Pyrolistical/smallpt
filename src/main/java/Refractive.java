@@ -9,7 +9,10 @@ public class Refractive implements Material {
 	}
 
 	@Override
-	public Vector getBSDF(final Sampler sampler, final Scene scene, final Ray r, final int depth, final int E, final IntersectionResult intersection, final Sphere obj, final Vector intersectionPoint, final Vector normal, final Vector f) {
+	public Vector getBSDF(final Sampler sampler, final Scene scene, final Ray r, final int depth, final int E, final IntersectionResult intersection, final Vector f) {
+		final Sphere obj = intersection.object; // the hit object
+		final Vector intersectionPoint = intersection.getIntersectionPoint();
+		final Vector normal = intersection.getNormal();
 		final Vector nl = normal.dot(r.direction) < 0 ? normal : normal.scale(-1);
 		final Ray reflRay = new Ray(intersectionPoint, r.direction.minus(normal.scale(2 * normal.dot(r.direction)))); // Ideal dielectric REFRACTION
 		final double into = normal.dot(nl); // Ray from outside going in?
