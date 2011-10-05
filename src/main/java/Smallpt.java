@@ -9,7 +9,7 @@ import java.util.Random;
 import javax.imageio.ImageIO;
 
 // smallpt, a Path Tracer by Kevin Beason, 2008
-class Smallpt {
+class Smallpt implements Sampler {
 
 	static double clamp(final double x) {
 		return x < 0 ? 0 : x > 1 ? 1 : x;
@@ -25,11 +25,13 @@ class Smallpt {
 
 	public static final Random random = new Random(1337);
 
-	static Vector radiance(final Scene scene, final Ray r, final int depth) {
+	@Override
+	public Vector radiance(final Scene scene, final Ray r, final int depth) {
 		return radiance(scene, r, depth, 1);
 	}
 
-	static Vector radiance(final Scene scene, final Ray r, int depth, final int E) {
+	@Override
+	public Vector radiance(final Scene scene, final Ray r, int depth, final int E) {
 		final IntersectionResult intersection = scene.intersect(r);
 		if (intersection.isMiss()) {
 			return new Vector(0, 0, 0);
@@ -46,102 +48,7 @@ class Smallpt {
 				return obj.emission.scale(E);
 			}
 		} // R.R.
-		if (obj.material == Material.DIFFUSE) { // Ideal DIFFUSE reflection
-			return diffuse(scene, depth, E, intersection, obj, intersectionPoint, normal, f);
-		} else if (obj.material == Material.SPECULAR) { // Ideal SPECULAR reflection
-			return specular(scene, r, depth, obj, intersectionPoint, normal, f);
-		}
-		return refraction(scene, r, depth, obj, intersectionPoint, normal, f);
-	}
-
-	private static Vector diffuse(final Scene scene, final int depth, final int E, final IntersectionResult intersection, final Sphere obj, final Vector intersectionPoint, final Vector normal, final Vector f) {
-		final Vector d = sampleAroundNormal(normal);
-
-		// Loop over any lights
-		Vector e = new Vector(0, 0, 0);
-		for (final Sphere light : scene.lights) {
-			final Vector lightDirection = light.center.minus(intersectionPoint).norm();
-			final IntersectionResult lightIntersection = scene.intersect(new Ray(intersectionPoint, lightDirection));
-			if (lightIntersection.isHit() && lightIntersection.object == light) {
-				final double cos_a_max = Math.sqrt(1 - light.radius * light.radius / intersectionPoint.minus(light.center).dot(intersectionPoint.minus(light.center)));
-				final double omega = 2 * Math.PI * (1 - cos_a_max);
-				e = e.plus(f.multiply(light.emission.scale(lightDirection.dot(normal) * omega)).scale(1 / Math.PI));
-			}
-		}
-
-		return obj.emission.scale(E).plus(e).plus(f.multiply(radiance(scene, new Ray(intersectionPoint, d), depth, 0)));
-	}
-
-	static Vector sampleAroundNormal(final Vector normal) {
-		final Vector sampleCosineHemisphere = sampleCosineHemisphere();
-
-		final Vector d = mapUnitZVector(sampleCosineHemisphere, normal);
-		return d;
-	}
-
-	/**
-	 * Applies the rotation required from Unit Z to destinations to source.
-	 */
-	private static Vector mapUnitZVector(final Vector source, final Vector destination) {
-		final Vector w = destination;
-		final Vector u = ((Math.abs(w.x) > .1 ? new Vector(0, 1, 0) : new Vector(1, 0, 0)).cross(w)).norm();
-		final Vector v = w.cross(u);
-		final Vector d = u.scale(source.x).plus(v.scale(source.y)).plus(w.scale(source.z)).norm();
-		return d;
-	}
-
-	static Vector sampleCosineHemisphere() {
-		final double u2 = random.nextDouble();
-		final double u1 = random.nextDouble();
-		final double theta = 2 * Math.PI * u2;
-		final double r = Math.sqrt(u1);
-		final double x = r * Math.cos(theta);
-		final double y = r * Math.sin(theta);
-		final double z = Math.sqrt(1 - u1);
-		final Vector d = new Vector(x, y, z).norm();
-		return d;
-	}
-
-	private static Vector specular(final Scene scene, final Ray r, final int depth, final Sphere obj, final Vector intersectionPoint, final Vector normal, final Vector f) {
-		return obj.emission.plus(f.multiply(radiance(scene, new Ray(intersectionPoint, r.direction.minus(normal.scale(2 * normal.dot(r.direction)))), depth)));
-	}
-
-	private static Vector refraction(final Scene scene, final Ray r, final int depth, final Sphere obj, final Vector intersectionPoint, final Vector normal, final Vector f) {
-		final Vector nl = normal.dot(r.direction) < 0 ? normal : normal.scale(-1);
-		final Ray reflRay = new Ray(intersectionPoint, r.direction.minus(normal.scale(2 * normal.dot(r.direction)))); // Ideal dielectric REFRACTION
-		final double into = normal.dot(nl); // Ray from outside going in?
-		final double nc = 1;
-		final double nt = 1.5;
-		final double nnt = Math.pow(nc / nt, Math.signum(into));
-		final double ddn = r.direction.dot(nl);
-		final double cos2t = 1 - nnt * nnt * (1 - ddn * ddn);
-		if (cos2t < 0) {
-			return obj.emission.plus(f.multiply(radiance(scene, reflRay, depth)));
-		}
-		final Vector tdir = r.direction.scale(nnt).minus(normal.scale((Math.signum(into) * (ddn * nnt + Math.sqrt(cos2t))))).norm();
-		final double a = nt - nc;
-		final double b = nt + nc;
-		final double R0 = a * a / (b * b);
-		final double c = 1 - (into > 0 ? -ddn : tdir.dot(normal));
-		final double Re = R0 + (1 - R0) * Math.pow(c, 5);
-		final double Tr = 1 - Re;
-		final double P = .25 + .5 * Re;
-		final double RP = Re / P;
-		final double TP = Tr / (1 - P);
-		final Vector xx = getXX(scene, depth, intersectionPoint, reflRay, tdir, Re, Tr, P, RP, TP);
-		return obj.emission.plus(f.multiply(xx));
-	}
-
-	private static Vector getXX(final Scene scene, final int depth, final Vector x, final Ray reflRay, final Vector tdir, final double Re, final double Tr, final double P, final double RP, final double TP) {
-		if (depth > 2) {
-			if (random.nextDouble() < P) { // Russian roulette
-				return radiance(scene, reflRay, depth).scale(RP);
-			} else {
-				return radiance(scene, new Ray(x, tdir), depth).scale(TP);
-			}
-		} else {
-			return radiance(scene, reflRay, depth).scale(Re).plus(radiance(scene, new Ray(x, tdir), depth).scale(Tr));
-		}
+		return obj.material.getBSDF(this, scene, r, depth, E, intersection, obj, intersectionPoint, normal, f);
 	}
 
 	public static void main(final String[] argv) throws IOException {
@@ -150,21 +57,22 @@ class Smallpt {
 		final int h = argv.length == 3 ? Integer.valueOf(argv[1]) : 256;
 		final int samples = argv.length == 3 ? Integer.valueOf(argv[2]) : 6;
 		System.err.println(String.format("Options %dx%d with %d samples", w, h, samples * samples));
-		final Scene scene = new Scene();
+		final Scene scene = new Scene(random);
 		final Camera camera = new Camera(new Vector(0, 11.2, 214), new Vector(0, -0.042612, -1), (double) w / h, 4 * Math.PI / 25); // 28.8 degrees
-		final Vector[][] image = renderImage(scene, w, h, samples, camera);
+		final Sampler sampler = new Smallpt();
+		final Vector[][] image = renderImage(sampler, scene, w, h, samples, camera);
 		writeImage(w, h, image);
 		final long end = System.currentTimeMillis();
 		System.out.println(String.format("Finished in %dms", end - start));
 	}
 
-	private static Vector[][] renderImage(final Scene scene, final int w, final int h, final int samples, final Camera camera) {
+	private static Vector[][] renderImage(final Sampler sampler, final Scene scene, final int w, final int h, final int samples, final Camera camera) {
 		final Vector[][] image = new Vector[h][];
 		for (int y = 0; y < h; y++) { // Loop over image rows
 			image[y] = new Vector[w];
 			System.err.println(String.format("\rRendering (%d spp) %5.2f%%", samples * samples, 100. * y / (h - 1)));
 			for (int x = 0; x < w; x++) {
-				final List<Vector> radiances = samplePixel(scene, w, h, samples, camera, y, x);
+				final List<Vector> radiances = samplePixel(sampler, scene, w, h, samples, camera, y, x);
 				final Vector radiance = combineRadiances(radiances);
 				image[y][x] = radiance;
 			}
@@ -172,14 +80,14 @@ class Smallpt {
 		return image;
 	}
 
-	private static List<Vector> samplePixel(final Scene scene, final int w, final int h, final int samples, final Camera camera, final int y, final int x) {
+	private static List<Vector> samplePixel(final Sampler sampler, final Scene scene, final int w, final int h, final int samples, final Camera camera, final int y, final int x) {
 		final List<Vector> radiances = new ArrayList<Vector>();
 		for (int sy = 0; sy < samples; sy++) {
 			final double dy = (double) sy / samples;
 			for (int sx = 0; sx < samples; sx++) {
 				final double dx = (double) sx / samples;
 				final Ray sampleRay = camera.getSampleRay((dx + x) / w, (dy + y) / h);
-				final Vector radiance = radiance(scene, sampleRay, 0);
+				final Vector radiance = sampler.radiance(scene, sampleRay, 0);
 				radiances.add(new Vector(clamp(radiance.x), clamp(radiance.y), clamp(radiance.z)));
 			}
 		}
