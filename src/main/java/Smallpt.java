@@ -62,8 +62,8 @@ class Smallpt {
 		Vector e = new Vector(0, 0, 0);
 		for (final Sphere light : scene.lights) {
 			final Vector lightDirection = light.center.minus(intersectionPoint).norm();
-			final IntersectionResult shadowIntersection = scene.intersect(new Ray(intersectionPoint, lightDirection));
-			if (shadowIntersection.isHit() && shadowIntersection.object == light) { // shadow ray
+			final IntersectionResult lightIntersection = scene.intersect(new Ray(intersectionPoint, lightDirection));
+			if (lightIntersection.isHit() && lightIntersection.object == light) {
 				final double cos_a_max = Math.sqrt(1 - light.radius * light.radius / intersectionPoint.minus(light.center).dot(intersectionPoint.minus(light.center)));
 				final double omega = 2 * Math.PI * (1 - cos_a_max);
 				e = e.plus(f.multiply(light.emission.scale(lightDirection.dot(nl) * omega)).scale(1 / Math.PI));
