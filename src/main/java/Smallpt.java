@@ -74,13 +74,32 @@ class Smallpt {
 	}
 
 	static Vector sampleAroundNormal(final Vector normal) {
-		final double theta = 2 * Math.PI * random.nextDouble();
-		final double u1 = random.nextDouble();
-		final double r = Math.sqrt(u1);
-		final Vector w = normal;
+		final Vector sampleCosineHemisphere = sampleCosineHemisphere();
+
+		final Vector d = mapUnitZVector(sampleCosineHemisphere, normal);
+		return d;
+	}
+
+	/**
+	 * Applies the rotation required from Unit Z to destinations to source.
+	 */
+	private static Vector mapUnitZVector(final Vector source, final Vector destination) {
+		final Vector w = destination;
 		final Vector u = ((Math.abs(w.x) > .1 ? new Vector(0, 1, 0) : new Vector(1, 0, 0)).cross(w)).norm();
 		final Vector v = w.cross(u);
-		final Vector d = u.scale(Math.cos(theta) * r).plus(v.scale(Math.sin(theta) * r)).plus(w.scale(Math.sqrt(1 - u1))).norm();
+		final Vector d = u.scale(source.x).plus(v.scale(source.y)).plus(w.scale(source.z)).norm();
+		return d;
+	}
+
+	static Vector sampleCosineHemisphere() {
+		final double u2 = random.nextDouble();
+		final double u1 = random.nextDouble();
+		final double theta = 2 * Math.PI * u2;
+		final double r = Math.sqrt(u1);
+		final double x = r * Math.cos(theta);
+		final double y = r * Math.sin(theta);
+		final double z = Math.sqrt(1 - u1);
+		final Vector d = new Vector(x, y, z).norm();
 		return d;
 	}
 
