@@ -1,25 +1,9 @@
-import java.awt.Color;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 
-import javax.imageio.ImageIO;
-
 // smallpt, a Path Tracer by Kevin Beason, 2008
 class Smallpt implements Sampler {
-
-	static double clamp(final double x) {
-		return x < 0 ? 0 : x > 1 ? 1 : x;
-	}
-
-	static double increaseBrightness(final double x) {
-		return Math.pow(clamp(x), 1 / 2.2);
-	}
-
-	static int toInt(final double x) {
-		return (int) (clamp(x) * 255 + .5);
-	}
 
 	public static final Random random = new Random(1337);
 
@@ -58,26 +42,10 @@ class Smallpt implements Sampler {
 		final Sampler sampler = new Smallpt();
 		final ImageRenderer imageRenderer = new ImageRenderer();
 		final Vector[][] image = imageRenderer.renderImage(sampler, scene, w, h, samples, camera);
-		writeImage(w, h, image);
+		final File f = new File("target/image.png");
+		ImageWriter.writeImage(w, h, image, f);
 		final long end = System.currentTimeMillis();
 		System.out.println(String.format("Finished in %dms", end - start));
 	}
 
-	private static void writeImage(final int w, final int h, final Vector[][] c) throws IOException {
-		final File f = new File("target/image.png"); // Write image to PPM file.
-
-		final BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-
-		for (int y = 0; y < c.length; y++) {
-			for (int x = 0; x < c[0].length; x++) {
-				final int red = toInt(increaseBrightness(c[y][x].x));
-				final int green = toInt(increaseBrightness(c[y][x].y));
-				final int blue = toInt(increaseBrightness(c[y][x].z));
-				final int rgb = new Color(red, green, blue).getRGB();
-				image.setRGB(x, c.length - y - 1, rgb);
-			}
-		}
-
-		ImageIO.write(image, "png", f);
-	}
 }
