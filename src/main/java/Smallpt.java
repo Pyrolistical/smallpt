@@ -2,8 +2,6 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 import javax.imageio.ImageIO;
@@ -58,47 +56,11 @@ class Smallpt implements Sampler {
 		final Scene scene = new Scene(random);
 		final Camera camera = new Camera(new Vector(0, 11.2, 214), new Vector(0, -0.042612, -1), (double) w / h, 4 * Math.PI / 25); // 28.8 degrees
 		final Sampler sampler = new Smallpt();
-		final Vector[][] image = renderImage(sampler, scene, w, h, samples, camera);
+		final ImageRenderer imageRenderer = new ImageRenderer();
+		final Vector[][] image = imageRenderer.renderImage(sampler, scene, w, h, samples, camera);
 		writeImage(w, h, image);
 		final long end = System.currentTimeMillis();
 		System.out.println(String.format("Finished in %dms", end - start));
-	}
-
-	private static Vector[][] renderImage(final Sampler sampler, final Scene scene, final int w, final int h, final int samples, final Camera camera) {
-		final Vector[][] image = new Vector[h][];
-		for (int y = 0; y < h; y++) { // Loop over image rows
-			image[y] = new Vector[w];
-			System.err.println(String.format("\rRendering (%d spp) %5.2f%%", samples * samples, 100. * y / (h - 1)));
-			for (int x = 0; x < w; x++) {
-				final List<Vector> radiances = samplePixel(sampler, scene, w, h, samples, camera, y, x);
-				final Vector radiance = combineRadiances(radiances);
-				image[y][x] = radiance;
-			}
-		}
-		return image;
-	}
-
-	private static List<Vector> samplePixel(final Sampler sampler, final Scene scene, final int w, final int h, final int samples, final Camera camera, final int y, final int x) {
-		final List<Vector> radiances = new ArrayList<Vector>();
-		for (int sy = 0; sy < samples; sy++) {
-			final double dy = (double) sy / samples;
-			for (int sx = 0; sx < samples; sx++) {
-				final double dx = (double) sx / samples;
-				final Ray sampleRay = camera.getSampleRay((dx + x) / w, (dy + y) / h);
-				final Vector radiance = sampler.radiance(scene, sampleRay, 0);
-				radiances.add(new Vector(clamp(radiance.x), clamp(radiance.y), clamp(radiance.z)));
-			}
-		}
-		return radiances;
-	}
-
-	private static Vector combineRadiances(final List<Vector> radiances) {
-		Vector combinedradiance = new Vector(0, 0, 0);
-		for (final Vector radiance : radiances) {
-			combinedradiance = combinedradiance.plus(radiance);
-		}
-		combinedradiance = combinedradiance.scale(1d / radiances.size());
-		return combinedradiance;
 	}
 
 	private static void writeImage(final int w, final int h, final Vector[][] c) throws IOException {
