@@ -39,7 +39,8 @@ public class SmallptTest {
 
 		// do fuzzy match to see if any channel difference was higher than 16
 		final int actualMaxDifference = Math.max(Math.abs((Integer) histogram.first()), (Integer) histogram.last());
-		assertTrue(String.format("max different %d is too high", actualMaxDifference), actualMaxDifference < 16);
+		System.out.println(String.format("max different is %d", actualMaxDifference));
+		assertTrue(String.format("max different is too high", actualMaxDifference), actualMaxDifference < 16);
 	}
 
 	private BufferedImage readResource(final String expectedImageFile) throws IOException {

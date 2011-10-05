@@ -37,7 +37,6 @@ class Smallpt {
 		final Sphere obj = intersection.object; // the hit object
 		final Vector intersectionPoint = intersection.getIntersectionPoint();
 		final Vector normal = intersection.getNormal();
-		final Vector nl = normal.dot(r.direction) < 0 ? normal : normal.scale(-1);
 		Vector f = obj.color;
 		final double p = Math.max(f.x, Math.max(f.y, f.z));
 		if (++depth > 5 || p == 0) {
@@ -48,15 +47,15 @@ class Smallpt {
 			}
 		} // R.R.
 		if (obj.material == Material.DIFFUSE) { // Ideal DIFFUSE reflection
-			return diffuse(scene, depth, E, intersection, obj, intersectionPoint, nl, f);
+			return diffuse(scene, depth, E, intersection, obj, intersectionPoint, normal, f);
 		} else if (obj.material == Material.SPECULAR) { // Ideal SPECULAR reflection
 			return specular(scene, r, depth, obj, intersectionPoint, normal, f);
 		}
-		return refraction(scene, r, depth, obj, intersectionPoint, normal, nl, f);
+		return refraction(scene, r, depth, obj, intersectionPoint, normal, f);
 	}
 
-	private static Vector diffuse(final Scene scene, final int depth, final int E, final IntersectionResult intersection, final Sphere obj, final Vector intersectionPoint, final Vector nl, final Vector f) {
-		final Vector d = sampleAroundNormal(nl);
+	private static Vector diffuse(final Scene scene, final int depth, final int E, final IntersectionResult intersection, final Sphere obj, final Vector intersectionPoint, final Vector normal, final Vector f) {
+		final Vector d = sampleAroundNormal(normal);
 
 		// Loop over any lights
 		Vector e = new Vector(0, 0, 0);
@@ -66,7 +65,7 @@ class Smallpt {
 			if (lightIntersection.isHit() && lightIntersection.object == light) {
 				final double cos_a_max = Math.sqrt(1 - light.radius * light.radius / intersectionPoint.minus(light.center).dot(intersectionPoint.minus(light.center)));
 				final double omega = 2 * Math.PI * (1 - cos_a_max);
-				e = e.plus(f.multiply(light.emission.scale(lightDirection.dot(nl) * omega)).scale(1 / Math.PI));
+				e = e.plus(f.multiply(light.emission.scale(lightDirection.dot(normal) * omega)).scale(1 / Math.PI));
 			}
 		}
 
@@ -107,7 +106,8 @@ class Smallpt {
 		return obj.emission.plus(f.multiply(radiance(scene, new Ray(intersectionPoint, r.direction.minus(normal.scale(2 * normal.dot(r.direction)))), depth)));
 	}
 
-	private static Vector refraction(final Scene scene, final Ray r, final int depth, final Sphere obj, final Vector intersectionPoint, final Vector normal, final Vector nl, final Vector f) {
+	private static Vector refraction(final Scene scene, final Ray r, final int depth, final Sphere obj, final Vector intersectionPoint, final Vector normal, final Vector f) {
+		final Vector nl = normal.dot(r.direction) < 0 ? normal : normal.scale(-1);
 		final Ray reflRay = new Ray(intersectionPoint, r.direction.minus(normal.scale(2 * normal.dot(r.direction)))); // Ideal dielectric REFRACTION
 		final double into = normal.dot(nl); // Ray from outside going in?
 		final double nc = 1;
