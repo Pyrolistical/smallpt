@@ -8,11 +8,7 @@ public class Sampler {
 		this.random = random;
 	}
 
-	public Vector radiance(final Scene scene, final Ray r, final int depth) {
-		return radiance(scene, r, depth, 1);
-	}
-
-	public Vector radiance(final Scene scene, final Ray r, int depth, final int E) {
+	public Vector radiance(final Scene scene, final Ray r, int depth) {
 		final IntersectionResult intersection = scene.intersect(r);
 		if (intersection.isMiss()) {
 			return new Vector(0, 0, 0);
@@ -24,10 +20,10 @@ public class Sampler {
 			if (random.nextDouble() < p) {
 				f = f.scale(1 / p);
 			} else {
-				return obj.emission.scale(E);
+				return obj.emission;
 			}
 		} // R.R.
-		return obj.material.getBSDF(this, scene, r, depth, E, intersection, f);
+		return obj.material.getBSDF(this, scene, r, depth, intersection, f);
 	}
 
 }

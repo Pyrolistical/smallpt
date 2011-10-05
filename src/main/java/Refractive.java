@@ -11,7 +11,7 @@ public class Refractive implements Material {
 	}
 
 	@Override
-	public Vector getBSDF(final Sampler sampler, final Scene scene, final Ray r, final int depth, final int E, final IntersectionResult intersection, final Vector f) {
+	public Vector getBSDF(final Sampler sampler, final Scene scene, final Ray r, final int depth, final IntersectionResult intersection, final Vector f) {
 		final Sphere obj = intersection.object; // the hit object
 		final Vector intersectionPoint = intersection.getIntersectionPoint();
 		final Vector normal = intersection.getNormal();
@@ -24,7 +24,7 @@ public class Refractive implements Material {
 		final double cosI = incident.dot(nl);
 		final double cos2t = 1 - refractiveIndexRatio * refractiveIndexRatio * (1 - cosI * cosI);
 		if (cos2t < 0) {
-			return specular.getBSDF(sampler, scene, r, depth, E, intersection, f);
+			return specular.getBSDF(sampler, scene, r, depth, intersection, f);
 		}
 		final Vector refractedDirection = incident.scale(refractiveIndexRatio).minus(normal.scale((Math.signum(into) * (cosI * refractiveIndexRatio + Math.sqrt(cos2t))))).norm();
 		final double a = refractiveIndexGlass - refractiveIndexAir;
