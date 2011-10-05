@@ -194,11 +194,11 @@ class Smallpt {
 			final double dy = (double) sy / samples;
 			for (int sx = 0; sx < samples; sx++) {
 				final double dx = (double) sx / samples;
-				final Vector sampleDirection = camera.getSampleDirection((dx + x) / w, (dy + y) / h);
-				final Vector radiance = radiance(new Ray(camera.position.plus(sampleDirection.scale(140)), sampleDirection.norm()), 0);
+				final Ray sampleRay = camera.getSampleRay((dx + x) / w, (dy + y) / h);
+				final Vector radiance = radiance(sampleRay, 0);
 				radiances.add(new Vector(clamp(radiance.x), clamp(radiance.y), clamp(radiance.z)));
 			}
-		} // Camera rays are pushed ^^^^^ forward to start in interior
+		}
 		return radiances;
 	}
 

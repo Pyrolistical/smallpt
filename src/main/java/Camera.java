@@ -1,10 +1,10 @@
 public class Camera {
 
-	final Vector position;
-	final Vector direction;
-	final Vector right;
-	final Vector up;
-	final double fov; // radians
+	private final Vector position;
+	private final Vector direction;
+	private final Vector right;
+	private final Vector up;
+	private final double fov; // radians
 
 	public Camera(final Vector position, final Vector direction, final double aspectRatio, final double fov) {
 		this.position = position;
@@ -14,13 +14,18 @@ public class Camera {
 		this.fov = fov;
 	}
 
-	double getImagePlaneBoxSideLength() {
+	private double getImagePlaneBoxSideLength() {
 		// direction_length * 2 * tan(fov / 2) = side_length
 		// direction_length == 1
 		return 2 * Math.tan(fov / 2);
 	}
 
-	Vector getSampleDirection(final double x, final double y) {
-		return right.scale(x).plus(up.scale(y)).minus(new Vector(.5, .5, 0)).scale(getImagePlaneBoxSideLength()).plus(direction);
+	private Vector getSampleDirection(final double x, final double y) {
+		return right.scale(x).plus(up.scale(y)).minus(new Vector(.5, .5, 0)).scale(getImagePlaneBoxSideLength()).plus(direction).norm();
 	}
+
+	Ray getSampleRay(final double x, final double y) {
+		return new Ray(position, getSampleDirection(x, y));
+	}
+
 }

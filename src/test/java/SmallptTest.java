@@ -1,4 +1,4 @@
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -9,8 +9,8 @@ import java.io.InputStream;
 
 import javax.imageio.ImageIO;
 
-import org.apache.commons.collections.Bag;
-import org.apache.commons.collections.bag.HashBag;
+import org.apache.commons.collections.SortedBag;
+import org.apache.commons.collections.bag.TreeBag;
 import org.junit.Test;
 
 public class SmallptTest {
@@ -26,7 +26,7 @@ public class SmallptTest {
 	}
 
 	private void assertImage(final BufferedImage expected, final BufferedImage actual) throws IOException {
-		final Bag histogram = new HashBag();
+		final SortedBag histogram = new TreeBag();
 		for (int x = 0; x < expected.getWidth(); x++) {
 			for (int y = 0; y < expected.getHeight(); y++) {
 				final Color expectedPixel = new Color(expected.getRGB(x, y));
@@ -37,7 +37,7 @@ public class SmallptTest {
 			}
 		}
 
-		assertEquals(histogram.toString(), histogram.getCount(0), 3 * expected.getWidth() * expected.getHeight());
+		assertTrue(histogram.toString(), Math.max(Math.abs((Integer) histogram.first()), (Integer) histogram.last()) < 16);
 	}
 
 	private BufferedImage readResource(final String expectedImageFile) throws IOException {
