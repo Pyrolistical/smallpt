@@ -61,20 +61,12 @@ class Smallpt {
 		// Loop over any lights
 		Vector e = new Vector(0, 0, 0);
 		for (final Sphere light : scene.lights) {
-			final Vector sw = light.center.minus(intersectionPoint);
-			final Vector su = (Math.abs(sw.x) > .1 ? new Vector(0, 1, 0) : new Vector(1, 0, 0)).cross(sw).norm();
-			final Vector sv = sw.cross(su);
-			final double cos_a_max = Math.sqrt(1 - light.radius * light.radius / intersectionPoint.minus(light.center).dot(intersectionPoint.minus(light.center)));
-			final double eps1 = random.nextDouble();
-			final double eps2 = random.nextDouble();
-			final double cos_a = 1 - eps1 + eps1 * cos_a_max;
-			final double sin_a = Math.sqrt(1 - cos_a * cos_a);
-			final double phi = 2 * Math.PI * eps2;
-			final Vector l = su.scale(Math.cos(phi) * sin_a).plus(sv.scale(Math.sin(phi) * sin_a)).plus(sw.scale(cos_a)).norm();
-			final IntersectionResult shadowIntersection = scene.intersect(new Ray(intersectionPoint, l));
+			final Vector lightDirection = light.center.minus(intersectionPoint).norm();
+			final IntersectionResult shadowIntersection = scene.intersect(new Ray(intersectionPoint, lightDirection));
 			if (shadowIntersection.isHit() && shadowIntersection.object == light) { // shadow ray
+				final double cos_a_max = Math.sqrt(1 - light.radius * light.radius / intersectionPoint.minus(light.center).dot(intersectionPoint.minus(light.center)));
 				final double omega = 2 * Math.PI * (1 - cos_a_max);
-				e = e.plus(f.multiply(light.emission.scale(l.dot(nl) * omega)).scale(1 / Math.PI));
+				e = e.plus(f.multiply(light.emission.scale(lightDirection.dot(nl) * omega)).scale(1 / Math.PI));
 			}
 		}
 
