@@ -2,9 +2,9 @@ import java.util.Random;
 
 public class Diffuse implements Material {
 
-	private final Random random;
+	private final ThreadLocal<Random> random;
 
-	public Diffuse(final Random random) {
+	public Diffuse(final ThreadLocal<Random> random) {
 		this.random = random;
 	}
 
@@ -55,8 +55,8 @@ public class Diffuse implements Material {
 	}
 
 	private Vector sampleCosineHemisphere() {
-		final double u2 = random.nextDouble();
-		final double u1 = random.nextDouble();
+		final double u2 = random.get().nextDouble();
+		final double u1 = random.get().nextDouble();
 		final double theta = 2 * Math.PI * u2;
 		final double r = Math.sqrt(u1);
 		final double x = r * Math.cos(theta);

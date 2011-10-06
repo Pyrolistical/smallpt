@@ -4,9 +4,9 @@ public class Refractive implements Material {
 
 	private final Specular specular = new Specular();
 
-	private final Random random;
+	private final ThreadLocal<Random> random;
 
-	public Refractive(final Random random) {
+	public Refractive(final ThreadLocal<Random> random) {
 		this.random = random;
 	}
 
@@ -42,7 +42,7 @@ public class Refractive implements Material {
 		final double Tr = 1 - Re;
 		if (depth > 2) {
 			final double P = .25 + .5 * Re;
-			if (random.nextDouble() < P) { // Russian roulette
+			if (random.get().nextDouble() < P) { // Russian roulette
 				final Vector recursiveReflectionRadiance = sampler.radiance(scene, reflectionRay, depth);
 				final double RP = Re / P;
 				return recursiveReflectionRadiance.scale(RP);

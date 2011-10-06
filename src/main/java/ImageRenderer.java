@@ -1,5 +1,10 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class ImageRenderer {
 
@@ -7,18 +12,38 @@ public class ImageRenderer {
 		return Math.min(Math.max(0, x), 1);
 	}
 
-	public Vector[][] renderImage(final Sampler sampler, final Scene scene, final int w, final int h, final int samples, final Camera camera) {
+	private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+	public Vector[][] renderImage(final ThreadLocal<Random> random, final Sampler sampler, final Scene scene, final int w, final int h, final int samples, final Camera camera) throws Exception {
+		final List<Future<Vector[]>> rows = new ArrayList<Future<Vector[]>>();
+		for (int y = 0; y < h; y++) {
+			rows.add(executor.submit(createRowJob(random, sampler, scene, w, h, samples, camera, y)));
+		}
+		executor.shutdown();
 		final Vector[][] image = new Vector[h][];
-		for (int y = 0; y < h; y++) { // Loop over image rows
-			image[y] = new Vector[w];
-			System.err.println(String.format("\rRendering (%d spp) %5.2f%%", samples * samples, 100. * y / (h - 1)));
-			for (int x = 0; x < w; x++) {
-				final List<Vector> radiances = samplePixel(sampler, scene, w, h, samples, camera, x, y);
-				final Vector radiance = combineRadiances(radiances);
-				image[y][x] = radiance;
-			}
+		for (int y = 0; y < h; y++) {
+			image[y] = rows.get(y).get();
 		}
 		return image;
+	}
+
+	private Callable<Vector[]> createRowJob(final ThreadLocal<Random> random, final Sampler sampler, final Scene scene, final int w, final int h, final int samples, final Camera camera, final int y) {
+		return new Callable<Vector[]>() {
+			@Override
+			public Vector[] call() throws Exception {
+				if (random.get() == null) {
+					random.set(new Random(1337));
+				}
+				final Vector[] row = new Vector[w];
+				System.err.println(String.format("\rRendering (%d spp) %5.2f%%", samples * samples, 100. * y / (h - 1)));
+				for (int x = 0; x < w; x++) {
+					final List<Vector> radiances = samplePixel(sampler, scene, w, h, samples, camera, x, y);
+					final Vector radiance = combineRadiances(radiances);
+					row[x] = radiance;
+				}
+				return row;
+			}
+		};
 	}
 
 	private static List<Vector> samplePixel(final Sampler sampler, final Scene scene, final int w, final int h, final int samples, final Camera camera, final int x, final int y) {

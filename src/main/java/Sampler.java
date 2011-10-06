@@ -2,9 +2,9 @@ import java.util.Random;
 
 public class Sampler {
 
-	private final Random random;
+	private final ThreadLocal<Random> random;
 
-	public Sampler(final Random random) {
+	public Sampler(final ThreadLocal<Random> random) {
 		this.random = random;
 	}
 
@@ -17,7 +17,7 @@ public class Sampler {
 		Vector f = obj.color;
 		final double p = Math.max(f.x, Math.max(f.y, f.z));
 		if (++depth > 5 || p == 0) {
-			if (random.nextDouble() < p) {
+			if (random.get().nextDouble() < p) {
 				f = f.scale(1 / p);
 			} else {
 				return obj.emission;

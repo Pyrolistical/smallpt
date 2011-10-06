@@ -13,7 +13,9 @@ public class SamplingTest {
 		final SortedBag xhistogram = new TreeBag();
 		final SortedBag yhistogram = new TreeBag();
 		final SortedBag zhistogram = new TreeBag();
-		final Diffuse diffuse = new Diffuse(new Random(1337));
+		final ThreadLocal<Random> random = new ThreadLocal<Random>();
+		random.set(new Random(1337));
+		final Diffuse diffuse = new Diffuse(random);
 		for (int i = 0; i < 500; i++) {
 			final Vector sample = diffuse.sampleAroundNormal(new Vector(-1, 0, 0));
 			xhistogram.add((int) Math.floor(sample.x * bins / 2));

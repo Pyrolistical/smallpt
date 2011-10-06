@@ -13,7 +13,7 @@ public class Scene {
 
 	private final List<Sphere> spheres = new ArrayList<Sphere>();
 
-	public Scene(final Random random) {
+	public Scene(final ThreadLocal<Random> random) {
 		DIFFUSE = new Diffuse(random);
 		SPECULAR = new Specular();
 		REFRACTIVE = new Refractive(random);
