@@ -64,7 +64,8 @@ This is not a direct port of smallpt.  Look at the inital check-in to see a more
 <li>Reduced noise by removing subpixel logic by combining all the samples for a single pixel instead of doing it in two stages</li>
 <li>Flip scene inside out such that the rendered walls are external surface of the spheres</li>
 <li>Removed jittering of primary rays and backward light rays</li>
-<li>Simplifed material logic by disallowing rendering of opaque sphere surfaces from the inside of the sphere</li> 
+<li>Simplifed material logic by disallowing rendering of opaque sphere surfaces from the inside of the sphere</li>
+<li>Changed samples parameter to shoot samples*samples rays per pixel instead of just samples</li>
 </ul>
     <h2>Dependencies</h2>
 <p>Maven</p>
