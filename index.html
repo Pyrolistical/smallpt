@@ -56,11 +56,11 @@
 </div>
 <h2>Features</h2>
 <p>
-This is not a direct port of smallpt.  Look at the inital check-in to see a more minimal port to Java.
+This is not a direct port of smallpt.  Look at the <a href="https://github.com/Pyrolistical/smallpt/tree/ef8a41a666fc909bb99c5a17d7bfabf749e4bfdd/src/main/java">inital commit</a> to see a more minimal port to Java.
 </p>
 <ul>
 <li>Broken down monolithic into separate classes</li>
-<li>Includes <a href="http://kevinbeason.com/smallpt/explicit.cpp">explicit.cpp</a></li>
+<li>Includes explicit light sampling.  See: <a href="http://kevinbeason.com/smallpt/explicit.cpp">explicit.cpp</a></li>
 <li>Reduced noise by removing subpixel logic by combining all the samples for a single pixel instead of doing it in two stages</li>
 <li>Flip scene inside out such that the rendered walls are external surface of the spheres</li>
 <li>Removed jittering of primary rays and backward light rays</li>
@@ -70,7 +70,7 @@ This is not a direct port of smallpt.  Look at the inital check-in to see a more
     <h2>Dependencies</h2>
 <p>Maven</p>
 <h2>License</h2>
-<pre>Copyright 2010 Ronald Chen
+<pre>Copyright 2011 Ronald Chen
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
