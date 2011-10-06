@@ -3,7 +3,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-class Scene {
+public class Scene {
 
 	private final Material DIFFUSE;
 	private final Material SPECULAR;
@@ -31,7 +31,7 @@ class Scene {
 		spheres.addAll(lights);
 	}
 
-	IntersectionResult intersect(final Ray ray) {
+	public IntersectionResult intersect(final Ray ray) {
 		IntersectionResult t = IntersectionResult.MISS;
 		for (final Sphere s : spheres) {
 			final IntersectionResult d = s.intersect(ray);

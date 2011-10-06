@@ -2,8 +2,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 
-// smallpt, a Path Tracer by Kevin Beason, 2008
-class Smallpt {
+// smallpt, a Path Tracer originally written by Kevin Beason, 2008
+// Ported to Java and refactored by Ronald Chen
+public class Smallpt {
 
 	public static final Random random = new Random(1337);
 

@@ -13,7 +13,7 @@ public class Sampler {
 		if (intersection.isMiss()) {
 			return new Vector(0, 0, 0);
 		} // if miss, return black
-		final Sphere obj = intersection.object; // the hit object
+		final Sphere obj = intersection.object;
 		Vector f = obj.color;
 		final double p = Math.max(f.x, Math.max(f.y, f.z));
 		if (++depth > 5 || p == 0) {
@@ -25,5 +25,4 @@ public class Sampler {
 		} // R.R.
 		return obj.material.getBSDF(this, scene, r, depth, intersection, f);
 	}
-
 }

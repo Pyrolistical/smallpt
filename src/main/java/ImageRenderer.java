@@ -3,8 +3,8 @@ import java.util.List;
 
 public class ImageRenderer {
 
-	static double clamp(final double x) {
-		return x < 0 ? 0 : x > 1 ? 1 : x;
+	private static double clamp(final double x) {
+		return Math.min(Math.max(0, x), 1);
 	}
 
 	public Vector[][] renderImage(final Sampler sampler, final Scene scene, final int w, final int h, final int samples, final Camera camera) {

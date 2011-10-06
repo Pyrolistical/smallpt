@@ -16,7 +16,7 @@ public class Camera {
 
 	private double getImagePlaneBoxSideLength() {
 		// direction_length * 2 * tan(fov / 2) = side_length
-		// direction_length == 1
+		// where direction_length == 1
 		return 2 * Math.tan(fov / 2);
 	}
 
@@ -24,7 +24,7 @@ public class Camera {
 		return right.scale(x).plus(up.scale(y)).minus(new Vector(.5, .5, 0)).scale(getImagePlaneBoxSideLength()).plus(direction).norm();
 	}
 
-	Ray getSampleRay(final double x, final double y) {
+	public Ray getSampleRay(final double x, final double y) {
 		return new Ray(position, getSampleDirection(x, y));
 	}
 

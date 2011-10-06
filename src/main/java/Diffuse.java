@@ -1,6 +1,6 @@
 import java.util.Random;
 
-class Diffuse implements Material {
+public class Diffuse implements Material {
 
 	private final Random random;
 
@@ -10,7 +10,7 @@ class Diffuse implements Material {
 
 	@Override
 	public Vector getBSDF(final Sampler sampler, final Scene scene, final Ray ray, final int depth, final IntersectionResult intersection, final Vector f) {
-		final Sphere obj = intersection.object; // the hit object
+		final Sphere obj = intersection.object;
 		final Vector intersectionPoint = intersection.getIntersectionPoint();
 		final Vector normal = intersection.getNormal();
 		final Vector d = sampleAroundNormal(normal);
@@ -30,7 +30,7 @@ class Diffuse implements Material {
 		return obj.emission.plus(e).plus(f.multiply(sampler.radiance(scene, new Ray(intersectionPoint, d), depth)));
 	}
 
-	Vector sampleAroundNormal(final Vector normal) {
+	public Vector sampleAroundNormal(final Vector normal) {
 		final Vector sampleCosineHemisphere = sampleCosineHemisphere();
 
 		final Vector d = mapUnitZVector(sampleCosineHemisphere, normal);

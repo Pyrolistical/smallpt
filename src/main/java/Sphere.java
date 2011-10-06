@@ -1,19 +1,19 @@
-class Sphere {
+public class Sphere {
 	final double radius;
 	final Vector center;
 	final Vector emission;
 	final Vector color;
 	final Material material;
 
-	Sphere(final double rad_, final Vector p_, final Vector e_, final Vector c_, final Material refl_) {
-		radius = rad_;
-		center = p_;
-		emission = e_;
-		color = c_;
-		material = refl_;
+	public Sphere(final double radius, final Vector center, final Vector emission, final Vector color, final Material material) {
+		this.radius = radius;
+		this.center = center;
+		this.emission = emission;
+		this.color = color;
+		this.material = material;
 	}
 
-	IntersectionResult intersect(final Ray ray) {
+	public IntersectionResult intersect(final Ray ray) {
 		final Vector v = center.minus(ray.origin);
 		if (material.isOpaque() && v.squaredLength() < radius * radius) {
 			return IntersectionResult.MISS;
@@ -36,7 +36,7 @@ class Sphere {
 		return new IntersectionResult(ray, tnear, this);
 	}
 
-	Vector getNormal(final Vector intersectionPoint) {
+	public Vector getNormal(final Vector intersectionPoint) {
 		return intersectionPoint.minus(center).norm();
 	}
 };

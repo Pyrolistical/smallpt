@@ -1,21 +1,21 @@
-class IntersectionResult {
+public class IntersectionResult {
 	public static final IntersectionResult MISS = new IntersectionResult(null, Double.POSITIVE_INFINITY, null);
 
 	private final Ray ray;
 	private final double t;
 	final Sphere object;
 
-	IntersectionResult(final Ray ray, final double t, final Sphere object) {
+	public IntersectionResult(final Ray ray, final double t, final Sphere object) {
 		this.ray = ray;
 		this.t = t;
 		this.object = object;
 	}
 
-	Vector getIntersectionPoint() {
+	public Vector getIntersectionPoint() {
 		return ray.getVector(t);
 	}
 
-	Vector getNormal() {
+	public Vector getNormal() {
 		return object.getNormal(getIntersectionPoint());
 	}
 

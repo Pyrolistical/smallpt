@@ -7,22 +7,20 @@ import javax.imageio.ImageIO;
 
 public class ImageWriter {
 
-	static double clamp(final double x) {
-		return x < 0 ? 0 : x > 1 ? 1 : x;
+	private static double clamp(final double x) {
+		return Math.min(Math.max(0, x), 1);
 	}
 
-	static double increaseBrightness(final double x) {
+	private static double increaseBrightness(final double x) {
 		return Math.pow(clamp(x), 1 / 2.2);
 	}
 
-	static int toInt(final double x) {
+	private static int toInt(final double x) {
 		return (int) (clamp(x) * 255 + .5);
 	}
 
 	public static void writeImage(final int w, final int h, final Vector[][] c, final File destination) throws IOException {
-
 		final BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-
 		for (int y = 0; y < c.length; y++) {
 			for (int x = 0; x < c[0].length; x++) {
 				final int red = toInt(increaseBrightness(c[y][x].x));
@@ -32,7 +30,6 @@ public class ImageWriter {
 				image.setRGB(x, c.length - y - 1, rgb);
 			}
 		}
-
 		ImageIO.write(image, "png", destination);
 	}
 }
