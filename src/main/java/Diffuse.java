@@ -15,19 +15,25 @@ public class Diffuse implements Material {
 		final Vector normal = intersection.getNormal();
 		final Vector d = sampleAroundNormal(normal);
 
+		final Vector lightRadiance = getLightContribution(scene, intersectionPoint, normal, f);
+		final Vector recursiveRadiance = sampler.radiance(scene, new Ray(intersectionPoint, d), depth);
+		return obj.emission.plus(lightRadiance).plus(f.multiply(recursiveRadiance));
+	}
+
+	private Vector getLightContribution(final Scene scene, final Vector intersectionPoint, final Vector normal, final Vector f) {
 		// Loop over any lights
-		Vector e = new Vector(0, 0, 0);
+		Vector lightRadiance = new Vector(0, 0, 0);
 		for (final Sphere light : scene.lights) {
-			final Vector lightDirection = light.center.minus(intersectionPoint).norm();
-			final IntersectionResult lightIntersection = scene.intersect(new Ray(intersectionPoint, lightDirection));
+			final Vector intersection2lightDirection = light.getNormal(intersectionPoint).scale(-1);
+			final IntersectionResult lightIntersection = scene.intersect(new Ray(intersectionPoint, intersection2lightDirection));
 			if (lightIntersection.isHit() && lightIntersection.object == light) {
-				final double cos_a_max = Math.sqrt(1 - light.radius * light.radius / intersectionPoint.minus(light.center).dot(intersectionPoint.minus(light.center)));
+				final Vector light2intersectionDirection = intersectionPoint.minus(light.center);
+				final double cos_a_max = Math.sqrt(1 - light.radius * light.radius / light2intersectionDirection.dot(light2intersectionDirection));
 				final double omega = 2 * Math.PI * (1 - cos_a_max);
-				e = e.plus(f.multiply(light.emission.scale(lightDirection.dot(normal) * omega)).scale(1 / Math.PI));
+				lightRadiance = lightRadiance.plus(f.multiply(light.emission.scale(intersection2lightDirection.dot(normal) * omega)).scale(1 / Math.PI));
 			}
 		}
-
-		return obj.emission.plus(e).plus(f.multiply(sampler.radiance(scene, new Ray(intersectionPoint, d), depth)));
+		return lightRadiance;
 	}
 
 	public Vector sampleAroundNormal(final Vector normal) {

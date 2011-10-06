@@ -6,7 +6,8 @@ public class Specular implements Material {
 		final Vector intersectionPoint = intersection.getIntersectionPoint();
 		final Vector normal = intersection.getNormal();
 		final Ray reflectionRay = getReflectionRay(intersectionPoint, r.direction, normal);
-		return obj.emission.plus(f.multiply(sampler.radiance(scene, reflectionRay, depth)));
+		Vector recursiveReflectionRadiance = sampler.radiance(scene, reflectionRay, depth);
+		return obj.emission.plus(f.multiply(recursiveReflectionRadiance));
 	}
 
 	public Ray getReflectionRay(final Vector intersectionPoint, final Vector incident, final Vector normal) {

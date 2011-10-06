@@ -43,18 +43,18 @@ public class Refractive implements Material {
 		if (depth > 2) {
 			final double P = .25 + .5 * Re;
 			if (random.nextDouble() < P) { // Russian roulette
-				final Vector reflectionRadiance = sampler.radiance(scene, reflectionRay, depth);
+				final Vector recursiveReflectionRadiance = sampler.radiance(scene, reflectionRay, depth);
 				final double RP = Re / P;
-				return reflectionRadiance.scale(RP);
+				return recursiveReflectionRadiance.scale(RP);
 			} else {
-				final Vector refactionRadiance = sampler.radiance(scene, refractionRay, depth);
+				final Vector recursiveRefactionRadiance = sampler.radiance(scene, refractionRay, depth);
 				final double TP = Tr / (1 - P);
-				return refactionRadiance.scale(TP);
+				return recursiveRefactionRadiance.scale(TP);
 			}
 		} else {
-			final Vector reflectionRadiance = sampler.radiance(scene, reflectionRay, depth);
-			final Vector refactionRadiance = sampler.radiance(scene, refractionRay, depth);
-			return reflectionRadiance.scale(Re).plus(refactionRadiance.scale(Tr));
+			final Vector recursiveReflectionRadiance = sampler.radiance(scene, reflectionRay, depth);
+			final Vector recursiveRefactionRadiance = sampler.radiance(scene, refractionRay, depth);
+			return recursiveReflectionRadiance.scale(Re).plus(recursiveRefactionRadiance.scale(Tr));
 		}
 	}
 

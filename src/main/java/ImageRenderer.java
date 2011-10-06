@@ -13,7 +13,7 @@ public class ImageRenderer {
 			image[y] = new Vector[w];
 			System.err.println(String.format("\rRendering (%d spp) %5.2f%%", samples * samples, 100. * y / (h - 1)));
 			for (int x = 0; x < w; x++) {
-				final List<Vector> radiances = samplePixel(sampler, scene, w, h, samples, camera, y, x);
+				final List<Vector> radiances = samplePixel(sampler, scene, w, h, samples, camera, x, y);
 				final Vector radiance = combineRadiances(radiances);
 				image[y][x] = radiance;
 			}
@@ -21,7 +21,7 @@ public class ImageRenderer {
 		return image;
 	}
 
-	private static List<Vector> samplePixel(final Sampler sampler, final Scene scene, final int w, final int h, final int samples, final Camera camera, final int y, final int x) {
+	private static List<Vector> samplePixel(final Sampler sampler, final Scene scene, final int w, final int h, final int samples, final Camera camera, final int x, final int y) {
 		final List<Vector> radiances = new ArrayList<Vector>();
 		for (int sy = 0; sy < samples; sy++) {
 			final double dy = (double) sy / samples;

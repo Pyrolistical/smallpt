@@ -21,7 +21,10 @@ public class Camera {
 	}
 
 	private Vector getSampleDirection(final double x, final double y) {
-		return right.scale(x).plus(up.scale(y)).minus(new Vector(.5, .5, 0)).scale(getImagePlaneBoxSideLength()).plus(direction).norm();
+		final Vector base = right.scale(x).plus(up.scale(y));
+		final Vector centered = base.minus(new Vector(right.x / 2, up.y / 2, 0));
+		final Vector scaled = centered.scale(getImagePlaneBoxSideLength());
+		return scaled.plus(direction).norm();
 	}
 
 	public Ray getSampleRay(final double x, final double y) {
