@@ -57,4 +57,10 @@ public class Refractive implements Material {
 			return reflectionRadiance.scale(Re).plus(refactionRadiance.scale(Tr));
 		}
 	}
+
+	@Override
+	public boolean isOpaque() {
+		return false;
+	}
+
 }

@@ -60,4 +60,9 @@ class Diffuse implements Material {
 		return d;
 	}
 
+	@Override
+	public boolean isOpaque() {
+		return true;
+	}
+
 }

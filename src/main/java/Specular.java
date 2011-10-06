@@ -19,4 +19,9 @@ public class Specular implements Material {
 		return reflectedDirection;
 	}
 
+	@Override
+	public boolean isOpaque() {
+		return true;
+	}
+
 }
