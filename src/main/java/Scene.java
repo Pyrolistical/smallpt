@@ -12,8 +12,11 @@ public class Scene {
 	final List<Sphere> lights = new ArrayList<Sphere>();
 
 	private final List<Sphere> spheres = new ArrayList<Sphere>();
+	final Camera camera;
+	final Vector[][] image;
 
-	public Scene(final ThreadLocal<Random> random) {
+	public Scene(final int width, final int height, final Camera camera, final ThreadLocal<Random> random) {
+		this.camera = camera;
 		DIFFUSE = new Diffuse(random);
 		SPECULAR = new Specular();
 		REFRACTIVE = new Refractive(random);
@@ -29,6 +32,10 @@ public class Scene {
 				new Sphere(16.5, new Vector(23, -24.3, -3.6), new Vector(0, 0, 0), new Vector(.999, .999, .999), REFRACTIVE)// Glas
 				));
 		spheres.addAll(lights);
+		image = new Vector[width][];
+		for (int y = 0; y < width; y++) {
+			image[y] = new Vector[height];
+		}
 	}
 
 	public IntersectionResult intersect(final Ray ray) {
