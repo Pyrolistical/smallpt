@@ -14,7 +14,7 @@ public class Smallpt {
 		final ThreadLocal<Random> random = new ThreadLocal<Random>() {
 			@Override
 			protected Random initialValue() {
-				return new Random();
+				return new Random(1337);
 			}
 		};
 		final Scene scene = new Scene(random);
