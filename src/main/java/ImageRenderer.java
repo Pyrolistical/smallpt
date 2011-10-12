@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -14,10 +13,10 @@ public class ImageRenderer {
 
 	private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-	public Vector[][] renderImage(final ThreadLocal<Random> random, final Sampler sampler, final Scene scene, final int w, final int h, final int samples, final Camera camera) throws Exception {
+	public Vector[][] renderImage(final Sampler sampler, final Scene scene, final int w, final int h, final int samples, final Camera camera) throws Exception {
 		final List<Future<Vector[]>> rows = new ArrayList<Future<Vector[]>>();
 		for (int y = 0; y < h; y++) {
-			rows.add(executor.submit(createRowJob(random, sampler, scene, w, h, samples, camera, y)));
+			rows.add(executor.submit(createRowJob(sampler, scene, w, h, samples, camera, y)));
 		}
 		executor.shutdown();
 		final Vector[][] image = new Vector[h][];
@@ -27,13 +26,10 @@ public class ImageRenderer {
 		return image;
 	}
 
-	private Callable<Vector[]> createRowJob(final ThreadLocal<Random> random, final Sampler sampler, final Scene scene, final int w, final int h, final int samples, final Camera camera, final int y) {
+	private Callable<Vector[]> createRowJob(final Sampler sampler, final Scene scene, final int w, final int h, final int samples, final Camera camera, final int y) {
 		return new Callable<Vector[]>() {
 			@Override
 			public Vector[] call() throws Exception {
-				if (random.get() == null) {
-					random.set(new Random(1337));
-				}
 				final Vector[] row = new Vector[w];
 				System.err.println(String.format("\rRendering (%d spp) %5.2f%%", samples * samples, 100. * y / (h - 1)));
 				for (int x = 0; x < w; x++) {
