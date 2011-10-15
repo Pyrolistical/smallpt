@@ -29,8 +29,8 @@ public class Diffuse implements Material {
 			if (lightIntersection.isHit() && lightIntersection.object == light) {
 				final Vector light2intersectionDirection = intersectionPoint.minus(light.center);
 				final double cos_a_max = Math.sqrt(1 - light.radius * light.radius / light2intersectionDirection.dot(light2intersectionDirection));
-				final double omega = 2 * Math.PI * (1 - cos_a_max);
-				lightRadiance = lightRadiance.plus(f.multiply(light.emission.scale(intersection2lightDirection.dot(normal) * omega)).scale(1 / Math.PI));
+				final double omega = 2 * (1 - cos_a_max);
+				lightRadiance = lightRadiance.plus(f.multiply(light.emission.scale(intersection2lightDirection.dot(normal) * omega)));
 			}
 		}
 		return lightRadiance;
