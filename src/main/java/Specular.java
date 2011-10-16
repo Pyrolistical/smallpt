@@ -1,12 +1,13 @@
 public class Specular implements Material {
 
 	@Override
-	public Vector getBSDF(final Sampler sampler, final Scene scene, final Ray r, final int depth, final IntersectionResult intersection, final Vector f) {
+	public Vector getBSDF(final Sampler sampler, final Scene scene, final Ray r, final int depth, final IntersectionResult intersection) {
 		final Sphere obj = intersection.object;
+		final Vector f = obj.color;
 		final Vector intersectionPoint = intersection.getIntersectionPoint();
 		final Vector normal = intersection.getNormal();
 		final Ray reflectionRay = getReflectionRay(intersectionPoint, r.direction, normal);
-		Vector recursiveReflectionRadiance = sampler.radiance(scene, reflectionRay, depth);
+		final Vector recursiveReflectionRadiance = sampler.radiance(scene, reflectionRay, depth);
 		return obj.emission.plus(f.multiply(recursiveReflectionRadiance));
 	}
 

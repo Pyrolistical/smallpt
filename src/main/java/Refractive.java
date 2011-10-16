@@ -11,8 +11,9 @@ public class Refractive implements Material {
 	}
 
 	@Override
-	public Vector getBSDF(final Sampler sampler, final Scene scene, final Ray r, final int depth, final IntersectionResult intersection, final Vector f) {
+	public Vector getBSDF(final Sampler sampler, final Scene scene, final Ray r, final int depth, final IntersectionResult intersection) {
 		final Sphere obj = intersection.object;
+		final Vector f = obj.color;
 		final Vector intersectionPoint = intersection.getIntersectionPoint();
 		final Vector normal = intersection.getNormal();
 		final Vector incident = r.direction;
@@ -24,14 +25,17 @@ public class Refractive implements Material {
 		final double cosI = incident.dot(nl);
 		final double cos2t = 1 - refractiveIndexRatio * refractiveIndexRatio * (1 - cosI * cosI);
 		if (cos2t < 0) {
-			return specular.getBSDF(sampler, scene, r, depth, intersection, f);
+			return specular.getBSDF(sampler, scene, r, depth, intersection);
 		}
 		final Vector refractedDirection = incident.scale(refractiveIndexRatio).minus(normal.scale((Math.signum(into) * (cosI * refractiveIndexRatio + Math.sqrt(cos2t))))).norm();
+
+		// calculate fresnel reflectance, but in a funny way for russian roulette
 		final double a = refractiveIndexGlass - refractiveIndexAir;
 		final double b = refractiveIndexGlass + refractiveIndexAir;
 		final double R0 = a * a / (b * b);
 		final double c = 1 - (into > 0 ? -cosI : refractedDirection.dot(normal));
 		final double Re = R0 + (1 - R0) * Math.pow(c, 5);
+
 		final Vector radiance = russianRouletteBSDF(sampler, scene, depth, intersectionPoint, incident, nl, refractedDirection, Re);
 		return obj.emission.plus(f.multiply(radiance));
 	}

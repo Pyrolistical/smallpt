@@ -1,4 +1,7 @@
 public class Vector {
+
+	public static final Vector ZERO = new Vector(0, 0, 0);
+
 	final double x;
 	final double y;
 	final double z;
