@@ -19,7 +19,7 @@ public class Smallpt {
 		};
 		final Camera camera = new Camera(new Vector(0, 11.2, 214), new Vector(0, -0.042612, -1), (double) w / h, 4 * Math.PI / 25); // 28.8 degrees
 		final Scene scene = new Scene(w, h, camera, random);
-		final Sampler sampler = new Sampler(random);
+		final Sampler sampler = new Sampler();
 		final ImageRenderer imageRenderer = new ImageRenderer();
 		imageRenderer.renderImage(sampler, scene, w, h, samples);
 		final File f = new File("target/image.png");
